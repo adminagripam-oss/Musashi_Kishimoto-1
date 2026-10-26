@@ -17,12 +17,12 @@ Fase 0, tugas 4. Basis kode: commit `661b817`. Menurut spesifikasi migrasi, **ko
 
 | No | Aturan | Lokasi | Beda dengan PRD/spesifikasi |
 |---|---|---|---|
-| BR-07 | Ada **12 slot jam**: 06.00, 07.00, 08.00, 09.00, 10.00, 11.00, 12.00, 13.00, 14.00, 15.00, 16.00, **17.30**. Server tidak memvalidasi slot maupun format jam | `login.html:5456`, `:7453-7464`; `laporan_produksi.html:469`, `:976`; `rekap-cro-fullscreen.html:156` | PRD dan spesifikasi menyebut 07.00–18.00 |
+| BR-07 | Ada **12 slot jam**: 06.00, 07.00, 08.00, 09.00, 10.00, 11.00, 12.00, 13.00, 14.00, 15.00, 16.00, **17.30**. Server tidak memvalidasi slot maupun format jam. Data produksi mengikuti 12 slot ini: 0 dari 20.249 baris di luar slot (audit C1/C3) | `login.html:5456`, `:7453-7464`; `laporan_produksi.html:469`, `:976`; `rekap-cro-fullscreen.html:156` | PRD dan spesifikasi menyebut 07.00–18.00 |
 | BR-08 | Jam masa depan ditolak: `Date.UTC(tanggal, jam) − offset > waktu server`. Pesan kesalahan menyebut waktu server lokal region | `api/realisasi.js:157-174` | Cocok |
 | BR-09 | Zona waktu: **WITA (UTC+8)** untuk Kalimantan Selatan 1 & 2, Kalimantan Timur, Kalimantan Utara, Sulawesi Tenggara, Sulawesi Tengah; region lain **WIB (UTC+7)** | `api/realisasi.js:8-12` | Cocok |
 | BR-10 | "Hari ini" dan "bulan berjalan" untuk penguncian dihitung dengan **WIB untuk semua region**, termasuk region WITA. Tanggal bawaan dashboard juga hari ini menurut WIB | `api/realisasi.js:34-39`, `:124-129`; `login.html:4965-4975` | Spesifikasi 5A.1 mengasumsikan zona region. Q-BR-3 |
 | BR-11 | Simpan pada tanggal lampau **atau di luar bulan berjalan** wajib punya `unlock_requests` berstatus `APPROVED` untuk `(region, tanggal)`. ADMIN dikecualikan | `api/realisasi.js:123-155` | Cocok dengan PRD 3.7 dan rilis 2026-08-03 |
-| BR-12 | Persetujuan berlaku untuk **semua jam** pada tanggal itu, untuk realisasi **dan** estimasi sekaligus (tabel tidak membedakan jenis), dan **tidak pernah kedaluwarsa** | `api/realisasi.js:132-137`, `api/estimasi.js:144-149` | Tidak diatur di PRD. Q-BR-6 |
+| BR-12 | Persetujuan berlaku untuk **semua jam** pada tanggal itu, untuk realisasi **dan** estimasi sekaligus (tabel tidak membedakan jenis), dan **tidak pernah kedaluwarsa**. Skema mengonfirmasi: `unlock_requests` tidak punya kolom `type` (audit A1) | `api/realisasi.js:132-137`, `api/estimasi.js:144-149` | Tidak diatur di PRD. Q-BR-6 |
 | BR-13 | Hapus jam pada tanggal lampau wajib punya `unlock_requests` APPROVED. **Tanpa pengecualian ADMIN** dan **tanpa cek bulan** | `api/realisasi.js:204-221` | Tidak sejajar dengan BR-11 |
 | BR-14 | Tonase harus **0–5000** | `api/realisasi.js:5-6`, `:176-178` | Spesifikasi hanya menyebut ≥ 0 |
 | BR-15 | Data jam yang sudah ada **tidak dapat ditimpa**: harus "Hapus Jam Ini" lalu diisi ulang | `api/realisasi.js:180-186` | Spesifikasi 3C meminta upsert. Q-BR-7 |
@@ -68,7 +68,7 @@ Rincian BR-22 (toggle "Hanya Pengiriman Restan"):
 | No | Aturan | Lokasi | Beda dengan PRD/spesifikasi |
 |---|---|---|---|
 | BR-30 | Pemetaan CRO (lihat daftar di bawah tabel) | `laporan_produksi.html:522-545` | Q-BR-5 |
-| BR-31 | Nama resmi **`Sumut 2`**. `Sumatera Utara 2 Ex Torganda` / `Torganda` dinormalisasi ke nama ini | `.agents/AGENTS.md`; `api/kebunTK.js:17`, `:87-89`; `api/auth.js:11-12` | Q-BR-8 (akun mana yang resmi di tabel `regions`) |
+| BR-31 | Nama resmi **`Sumut 2`**. `Sumatera Utara 2 Ex Torganda` / `Torganda` dinormalisasi ke nama ini | `.agents/AGENTS.md`; `api/kebunTK.js:17`, `:87-89`; `api/auth.js:11-12` | Q-BR-8. Audit B1: hanya `Sumut 2` yang ada di `regions` |
 | BR-32 | Luasan Planted Kalbar 1A = 39.838,88 Ha dan Kalbar 1B = 38.117,11 Ha. Kalbar 1 = 1A + 1B. Total Planted 444.447 Ha. Papua Selatan dikeluarkan dari agregat | `FORMAT_ESTIMASI_PANEN.html:813-814`; `laporan_produksi.html:3336-3337`, `:5080`; `rekap_tk_panen.html:168-169`; `table-modal-fullscreen.html:178-179`; `login.html:1855` | Cocok dengan PRD 2026-07-25 / 2026-08-07. Konstanta yang sama diulang di 5 berkas |
 
 Rincian BR-30 (pemetaan CRO):
@@ -95,7 +95,7 @@ Rincian BR-30 (pemetaan CRO):
 | BR-33 | Kolom Ketersediaan (9): TK Juni, TK Juli, Trend (Jul vs Jun), TK Ags, Trend (Ags vs Jul), TK Sep, Trend (Sep vs Ags), SD Ags, SD Sep. Kolom Rencana Pemenuhan (4): Jul, Ags, Sep, Okt | `.agents/AGENTS.md` | Spesifikasi 6B.3 hanya sampai Agustus/September |
 | BR-34 | Bulan cut-off KPI **September** (`tk_september`) di-*hardcode* di server | `api/kebunTK.js:136-139` | Spesifikasi 6B.5 meminta diambil dari tabel pengaturan |
 | BR-35 | Field yang dapat diubah: `req_tk`, `luasan`, `tk_juni`, `tk_juli`, `tk_agustus`, `tk_september`, `target_juli`, `target_agustus`, `target_september`, `target_oktober` (semua ≥ 0). Regional dan admin sama-sama boleh mengubah `req_tk` dan `luasan` | `api/kebunTK.js:189-218`; PRD 2026-08-19 | Cocok |
-| BR-36 | Pencocokan region kebun bersifat *fuzzy*. Kalbar 1A dan 1B sama-sama menjadi `KALBAR 1` sehingga saling dapat mengubah. ID kebun baru = `max(896, maxId + 1)` | `api/kebunTK.js:10-40`, `:116`, `:362` | Q-BR-5 |
+| BR-36 | Pencocokan region kebun bersifat *fuzzy*. Kalbar 1A dan 1B sama-sama menjadi `KALBAR 1` sehingga saling dapat mengubah. ID kebun baru = `max(896, maxId + 1)`. Data: `Kalbar 1` berisi 62 kebun untuk 1A dan 1B; id tertinggi saat ini 896 (audit E1/E2) | `api/kebunTK.js:10-40`, `:116`, `:362` | Q-BR-5 |
 | BR-37 | Pada modal Tambah Kebun, akun regional mendapat CRO dan Region terisi otomatis dan terkunci; admin bebas. Kunci ini hanya di UI, server tidak menegakkannya | PRD 2026-08-19; `api/kebunTK.js:344-358` | — |
 | BR-38 | Ekspor Excel TK Panen: header #4BACC6, Arial tebal, rata tengah, garis 0,5 pt, ikon trend diganti ▲ (hijau) / ▼ (merah). `<colgroup>` 20 kolom | `laporan_produksi.html:4325-4405`; `.agents/AGENTS.md`; PRD 2026-08-11 | Cocok |
 | BR-39 | Panel Executive Intelligence Highlight: latar #d9d9d9, emas #B8860B, teks hitam/putih adaptif | `laporan_produksi.html:4115`; PRD 2026-08-11 | Cocok |
@@ -137,9 +137,10 @@ Rincian BR-40 (mode tanggal admin):
 - **Q-BR-2** Apakah batas H-1 pukul 22.00 WIB (BR-18) juga ditegakkan di server pada v2?
 - **Q-BR-3** "Hari ini" untuk penguncian dan tanggal bawaan: tetap WIB untuk semua region (BR-10), atau zona masing-masing region?
 - **Q-BR-4** Toggle Restan (BR-22): tetap seperti legacy, atau nilai dipulihkan dan statusnya disimpan?
-- **Q-BR-5** Sumatera Selatan masuk CRO mana (BR-30)? Apakah Kalbar 1A dan 1B memang berbagi data kebun (BR-36)?
+- **Q-BR-5** Sumatera Selatan masuk CRO mana (BR-30)? Apakah Kalbar 1A dan 1B memang berbagi data kebun (BR-36)? Data saat ini memang menggabungkannya sebagai `Kalbar 1` (audit E1). Kolom `data_kebun_tk.cro` mungkin sudah memuat jawaban bagian pertama: `SELECT DISTINCT cro FROM data_kebun_tk WHERE region = 'Sumsel';`
 - **Q-BR-6** Persetujuan revisi (BR-12): berlaku selamanya untuk semua jam, atau sekali pakai / berbatas waktu? Apakah persetujuan estimasi dan realisasi dipisah?
 - **Q-BR-7** Realisasi (BR-15): tetap *insert* + "Hapus Jam Ini", atau boleh menimpa langsung?
-- **Q-BR-8** Akun resmi Sumut 2 di tabel `regions`: `Sumut 2` atau `Sumatera Utara 2 Ex Torganda` (BR-31)?
+- **Q-BR-8** Akun resmi Sumut 2 di tabel `regions`: `Sumut 2` atau `Sumatera Utara 2 Ex Torganda` (BR-31)? Audit: hanya `Sumut 2` ada di `regions`. Nama Torganda hanya bisa login lewat fallback plaintext, pernah dipakai mengajukan permohonan pada 2026-07-21, dan tidak punya baris data (B1, C4, D4). Bila Torganda cukup menjadi alias, penggunanya diminta login sebagai `Sumut 2` sebelum fallback dihapus (G2 butir 5).
 - **Q-BR-9** Sesi tunggal (BR-05): cukup per browser seperti legacy, atau satu sesi aktif per region yang ditegakkan server?
 - **Q-BR-10** Target Challenge hanya berisi Juli–September 2026 (audit E4, `docs/db-audit-results/README.md`). Apakah target Oktober 2026 belum diunggah, atau program ini berhenti setelah September? Jawabannya menentukan apakah modul Target Challenge masih aktif dan ikut dimigrasi ke v2.
+- **Q-BR-11** `data_kebun_tk` memuat region **Papua Selatan** (10 kebun, luasan 0, kebutuhan TK 0) yang tidak punya akun dan tidak punya data panen (audit E1). Apakah ini region baru yang akan diaktifkan, atau sisa data uji? Bila diaktifkan, Papua memakai **WIT (UTC+9)**, padahal aturan bisnis 2 di spesifikasi hanya mengenal WIB (UTC+7) dan WITA (UTC+8).

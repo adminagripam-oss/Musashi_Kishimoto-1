@@ -53,5 +53,7 @@ Status:
   - **c.** rotasi password;
   - **e.** screenshot baseline.
 - Halaman yang dipotret bot beserta viewport-nya (menunggu skrip bot → `docs/bot-inventory.md`).
-- Q-BR-1 sampai Q-BR-9 (`docs/business-rules.md`).
+- Q-BR-1 sampai Q-BR-11 (`docs/business-rules.md`).
 - Render atau Railway (D3).
+- G2 butir 5 (hapus fallback password plaintext): menunggu Q-BR-8, dan masuknya `QC admin` ke `regions` dengan hash password baru. Itu tulisan ke database, jadi perlu izin dan dikerjakan di staging dulu (`docs/db-schema.md` §6).
+- G3 (`docs/g3-db-hardening.sql`): menunggu izin; dijalankan di staging dulu, lalu produksi.

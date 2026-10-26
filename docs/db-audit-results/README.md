@@ -51,19 +51,21 @@ Tabel `unlock_requests`, `target_challenge_bulanan`, dan `laporan_realisasi_pane
 ## Run 2 — 2026-10-26
 
 - **Oleh:** pemilik produk, lewat Supabase SQL Editor, memakai `db-audit.sql` satu-query.
-- **Project:** TIDAK DIKETAHUI (produksi atau staging). `sesi_aktif` 18.600 baris dan data s.d. 2026-10-24 → kemungkinan produksi.
-- **Diterima:** blok **0, A1–A8** (A8 terpotong di tengah pada batas 50.000 karakter paste).
-- **Belum diterima:** **A9, A10, A11, B1–B3, C1–C4, D1–D4, E1–E5.**
+- **Project:** TIDAK DIKETAHUI (produksi atau staging), kemungkinan produksi. Data hari berjalan (2026-10-26) ikut terbaca.
+- **Diterima:** semua 28 blok. Paste pertama terpotong di blok A8 pada batas 50.000 karakter; hasil lengkap kemudian dikirim sebagai CSV.
+- **Salinan mentah:** `audit-run2-2026-10-26.csv` di folder ini. Hanya lokal: `.gitignore` folder ini mengecualikan `*.csv` dan `*.json`.
 
-Hasil skema ditulis ke [`../db-schema.md`](../db-schema.md). Ringkasan:
-- 15 tabel; 10 di luar PRD §5. `audit_log` (9.721) temuan baru.
-- `database_input` **tanpa** unique (region, tanggal, jam) → dedupe + constraint di Fase 2.
-- **R-06 terkonfirmasi:** `rate_limit` kosong.
-- **R-08 terkonfirmasi:** `anon`/`authenticated` dapat EXECUTE `check_password` (A6).
-- **R-09 terkonfirmasi (`data_kebun_tk`):** policy publik SELECT/INSERT/UPDATE (A8).
-- `regions` 24 baris vs 26 akun di kode → blok B1 wajib sebelum G2 butir 5.
-- `profiles`/`rate_limit` kosong (jalur Supabase Auth & rate limit mati).
+Hasilnya ditulis ke [`../db-schema.md`](../db-schema.md). Ringkasan:
+- **Skema:** 15 tabel, 10 di antaranya di luar PRD §5; tidak ada view; tidak ada `pg_cron`. `audit_log` (9.721 baris) adalah temuan baru.
+- **Terkonfirmasi:**
+  - R-06: `rate_limit` kosong;
+  - R-08: `anon`/`authenticated` dapat EXECUTE `check_password`;
+  - R-09: `data_kebun_tk` terbuka, kedua bucket publik, siapa pun bisa unggah ke dan melihat daftar `surat_files`.
+- **Akun:** `QC admin` dan `Sumatera Utara 2 Ex Torganda` tidak ada di `regions`, jadi hanya bisa login lewat fallback plaintext.
+- **Data bersih**, kecuali 6 grup realisasi ganda (Sumut 2, 2026-10-01, nilainya identik). Tidak ada `jam` di luar 12 slot legacy.
+- **R-19 dinilai ulang:** tidak ada permohonan PENDING, dan tidak ada kembaran yang statusnya berbeda. 30 baris D4 berasal dari aturan sebelum 2026-07-24.
+- **Modul:** `Papua Selatan` muncul di data kebun (Q-BR-11). SAP hanya berisi 2 surat. Baseline TK: 754 kebun, 443.362,62 ha.
 
-### Yang masih diperlukan
+### Berikutnya
 
-Paste sisa blok (A9–E5). Agar tidak kena batas 50.000 karakter lagi, jalankan ulang file yang sama tetapi batasi ke sisa blok — ganti baris `FROM (` pembuka sehingga hanya blok A9 ke bawah yang di-UNION, atau cukup kirim dua paste: satu untuk A9–B3 dan satu untuk C1–E5. Blok B1 (akun) dan A9 (bucket) paling diprioritaskan.
+Jalankan file yang sama di **staging** setelah project-nya dibuat. Blok A dari kedua hasil harus sama (DoD Fase 0).

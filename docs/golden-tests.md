@@ -18,12 +18,22 @@ Fase 0, tugas 7. Alat: `tools/snapshot-legacy.ts`.
 
 ```powershell
 $env:LEGACY_BASE_URL = "http://localhost:3000"
-$env:SNAPSHOT_REGIONAL_REGION = "Riau 1"            # atau region lain, satu WIB / satu WITA
+$env:SNAPSHOT_REGIONAL_REGION = "Sumut 2"           # WIB; ulangi dengan region WITA, mis. "Kalimantan Timur"
 $env:SNAPSHOT_REGIONAL_PASSWORD = "<password staging>"
 $env:SNAPSHOT_ADMIN_PASSWORD = "<password staging>"
-$env:SNAPSHOT_DATES = "2026-09-30,2026-10-15,2026-10-25"
+$env:SNAPSHOT_DATES = "2026-09-30,2026-10-01,2026-10-14"
 npx tsx tools/snapshot-legacy.ts
 ```
+
+Tanggal dan region dipilih dari audit blok E5 (`docs/db-schema.md` §9) agar tiap cabang perilaku terekam:
+
+| Tanggal | Alasan |
+|---|---|
+| 2026-09-30 | Bulan lalu: aturan kunci lintas bulan; Target Challenge September ada; LHP ada |
+| 2026-10-01 | Awal bulan berjalan, dan memuat 6 baris duplikat Sumut 2. Merekam cara legacy menjumlah duplikat (R-32) |
+| 2026-10-14 | Hari kerja hampir lengkap (realisasi 22/23, estimasi 23/23) tanpa LHP dan tanpa Target Oktober, sehingga cabang `exists: false` terekam |
+
+Region `Sumut 2` dipilih karena duplikat ada di region itu. Jalankan sekali lagi dengan satu region WITA untuk paritas zona waktu.
 
 Variabel opsional: `SNAPSHOT_OUT` (bawaan `tests/golden/legacy`).
 
@@ -60,6 +70,8 @@ npx tsx tools/snapshot-legacy.ts --probe-writes
 ```
 
 Hasil ada di `probes/revision-approval/verdict.json`. Nilai `bugConfirmed: true` berarti persetujuan "Buka Real. Produksi" tidak membuka form realisasi (`docs/risks.md` R-19).
+
+Hasil yang diharapkan adalah `bugConfirmed: true`. Probe ini merekam jeda sebelum persetujuan kedua: `6.getUnlockRequests.admin.json` akan memuat kembaran PENDING, yang di panel admin tampil sebagai "Buka Est. Panen". Data produksi menunjukkan admin biasanya menyetujui kembaran itu kemudian (`docs/db-schema.md` §8).
 
 Baris `delete_requests` dan `unlock_requests` milik probe akan tertinggal di staging, karena legacy tidak punya API untuk menghapus permohonan.
 

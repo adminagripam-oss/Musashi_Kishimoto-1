@@ -1,0 +1,3 @@
+# Raw audit output holds business data; keep it local (see README.md).
+*.csv
+*.json

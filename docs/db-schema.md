@@ -1,136 +1,354 @@
 # Skema Database AGRI-PAM v1 (Fase 0, tugas 6)
 
-Sumber: hasil `docs/db-audit.sql` run 2 (blok 0, A1–A8), dijalankan di SQL Editor pada 2026-10-26. Ringkasan run ada di [`db-audit-results/README.md`](db-audit-results/README.md). Dibandingkan dengan `prd.md` Bagian 5 dan spesifikasi Fase 2.
+**Sumber:**
+- Hasil `docs/db-audit.sql` run 2 tanggal 2026-10-26, lengkap 28 blok. Ringkasan run ada di [`db-audit-results/README.md`](db-audit-results/README.md); salinan mentahnya disimpan lokal dan tidak di-commit.
+- Project: kemungkinan produksi, karena data hari berjalan ikut terbaca. Konfirmasi pemilik masih ditunggu.
 
-> **Belum lengkap.** Paste hasil run 2 terpotong di batas 50.000 karakter di tengah blok A8, jadi blok **A9 (bucket), A10 (view), A11 (extension), B, C, D, E belum diterima.** Bagian yang bergantung pada blok itu ditandai "menunggu blok …" di bawah. Dump skema penuh (`supabase/legacy_schema.sql`) tetap wajib dan menjadi baseline Fase 2.
+**Pembanding:** `prd.md` Bagian 5 dan spesifikasi Fase 2.
 
-Catatan: `schema.sql` di repo **tidak** mewakili produksi (R-14b). Dokumen ini, bukan berkas itu, adalah gambaran skema yang benar.
+**Belum termasuk:**
+- dump DDL lengkap `supabase/legacy_schema.sql`, yang tetap wajib sebagai baseline Fase 2;
+- perbandingan dengan staging (DoD Fase 0).
 
-## 1. Tabel di schema `public`
+`schema.sql` di repo **tidak** mewakili produksi (R-14b). Pegangan yang benar adalah dokumen ini.
 
-15 tabel. Kolom `approx_rows` dari `pg_stat_user_tables` (perkiraan).
+## 1. Objek database
+
+15 tabel di schema `public`. Tidak ada view (A10). Kolom "Baris" berasal dari `pg_stat_user_tables`, jadi angkanya perkiraan.
 
 | Tabel | Baris | Di PRD §5? | Catatan |
 |---|---|---|---|
-| `regions` | 24 | Ya | Master akun + `password_hash`. **24 baris, kode menyebut 26 akun** (lihat §6) |
-| `database_input` | 20.249 | Ya | Realisasi per jam. **Tanpa unique (region, tanggal, jam)** (§3) |
+| `regions` | 24 | Ya | Master akun + `password_hash`. Dua akun yang disebut kode tidak ada di sini (§6) |
+| `database_input` | 20.249 | Ya | Realisasi per jam. **Tanpa unique (region, tanggal, jam)**, dan ada 6 grup duplikat (§7) |
 | `data_estimasi` | 2.879 | Ya | Estimasi harian. Sudah unique (tanggal, region) |
-| `sesi_aktif` | 18.600 | Ya | Audit sesi. **Tidak pernah dibersihkan** (§5) |
-| `delete_requests` | 188 | Ya | Permohonan hapus/buka. Punya kolom `jam`; **tanpa CHECK `type`** |
-| `unlock_requests` | 240 | **Tidak** | Sumber cek APPROVED realisasi & estimasi. Tanpa kolom `type` |
-| `data_kebun_tk` | 754 | **Tidak** | TK Panen. **Policy RLS terbuka** (§4, R-09) |
+| `sesi_aktif` | 18.600 | Ya | Audit sesi. **Tidak pernah dibersihkan** (§6) |
+| `delete_requests` | 188 | Ya | Permohonan hapus/buka. Punya kolom `jam`; **tanpa CHECK `type`**. Semua sudah diputus (§8) |
+| `unlock_requests` | 240 | **Tidak** | Sumber cek APPROVED realisasi & estimasi. Tanpa kolom `type`. Semua sudah diputus |
+| `data_kebun_tk` | 754 | **Tidak** | TK Panen, 23 kunci region kebun. **Policy RLS terbuka** (§4, R-09) |
 | `database_palmops` | 1.426 | **Tidak** | Input PalmOps admin. Unique (tanggal, region) |
 | `laporan_realisasi_panen` | 91 | **Tidak** | LHP harian (JSON per tanggal) |
-| `target_challenge_bulanan` | 3 | **Tidak** | Target per bulan (JSON). Hanya Jul–Sep 2026 (Q-BR-10) |
-| `surat` | 2 | **Tidak** | SAP Persuratan |
+| `target_challenge_bulanan` | 3 | **Tidak** | Target per bulan (JSON), hanya Jul–Sep 2026 (Q-BR-10) |
+| `surat` | 2 | **Tidak** | SAP Persuratan; nyaris tidak dipakai (§9) |
 | `log_tracking` | 3 | **Tidak** | Riwayat status surat |
-| `audit_log` | 9.721 | **Tidak** | **Temuan baru.** Log audit aplikasi (§7) |
-| `rate_limit` | 0 | **Tidak** | **Kosong — rate limit tak pernah aktif** (R-06, §8) |
-| `profiles` | 0 | **Tidak** | **Kosong — sisa Supabase Auth, tak dipakai** (§8) |
+| `audit_log` | 9.721 | **Tidak** | **Temuan baru:** log audit yang diisi aplikasi |
+| `rate_limit` | 0 | **Tidak** | Kosong, rate limit tidak pernah aktif (R-06) |
+| `profiles` | 0 | **Tidak** | Kosong, sisa Supabase Auth yang tidak dipakai |
 
-Sepuluh tabel ada di database tetapi tidak di PRD Bagian 5. Delapan di antaranya aktif dipakai API (`unlock_requests`, `data_kebun_tk`, `database_palmops`, `laporan_realisasi_panen`, `target_challenge_bulanan`, `surat`, `log_tracking`, `audit_log`); dua kosong dan mati (`rate_limit`, `profiles`).
+Sepuluh tabel ada di database tetapi tidak di PRD Bagian 5. Delapan aktif dipakai API; `rate_limit` dan `profiles` kosong dan mati.
+
+**Extension (A11):**
+- `pgcrypto` (schema `extensions`, dipakai `crypt()`), `uuid-ossp`, `pg_stat_statements`, `supabase_vault`, `plpgsql`;
+- **tidak ada `pg_cron`**, jadi tidak ada pekerjaan terjadwal di database.
 
 ## 2. Kolom per tabel (A1)
 
-Tipe disingkat: `int8`=bigint, `int4`=integer, `num`=numeric, `tstz`=timestamptz, `vc`=varchar, `bool`=boolean.
+Singkatan tipe: `int8` = bigint, `int4` = integer, `num` = numeric, `tstz` = timestamptz, `vc` = varchar, `bool` = boolean.
 
-**`regions`** — id int4 PK (seq), region_name vc UNIQUE NOT NULL, password_hash vc NOT NULL, is_active bool default true, created_at tstz default now().
+**`regions`**
+- id int4 PK (seq);
+- region_name vc UNIQUE NOT NULL;
+- password_hash vc NOT NULL;
+- is_active bool default true;
+- created_at tstz default now().
 
-**`database_input`** — id int8 PK (seq), tanggal date NOT NULL, region vc NOT NULL, jam vc NOT NULL, tonase num NOT NULL default 0, created_at tstz default now().
+**`database_input`**
+- id int8 PK (seq);
+- tanggal date NOT NULL;
+- region vc NOT NULL;
+- jam vc NOT NULL;
+- tonase num NOT NULL default 0;
+- created_at tstz default now().
 
-**`data_estimasi`** — id int8 PK (seq), waktu_input tstz NOT NULL default now(), tanggal date NOT NULL, region vc NOT NULL, restan_lalu num default 0, luas_panen_ha num NOT NULL, tk_panen_hk num NOT NULL, estimasi_panen_kg num NOT NULL, output_panen num default 0, estimasi_kirim_kg num NOT NULL, estimasi_restan_kg num NOT NULL.
-→ Kolom yang dipakai `api/estimasi.js` semua ada. **Tidak ada `is_tidak_panen`** dan tidak ada kolom `tk_panen` (adanya `tk_panen_hk`). Jadi status toggle Restan memang tak punya tempat simpan (menguatkan BR-22 / Q-BR-4), dan kolom `is_tidak_panen` di spesifikasi B11 benar-benar baru.
+**`data_estimasi`**
+- id int8 PK (seq);
+- waktu_input tstz NOT NULL default now();
+- tanggal date NOT NULL;
+- region vc NOT NULL;
+- restan_lalu num default 0;
+- luas_panen_ha num NOT NULL;
+- tk_panen_hk num NOT NULL;
+- estimasi_panen_kg num NOT NULL;
+- output_panen num default 0;
+- estimasi_kirim_kg num NOT NULL;
+- estimasi_restan_kg num NOT NULL.
 
-**`sesi_aktif`** — id int8 PK (seq), region vc NOT NULL, token text NOT NULL, login_time tstz NOT NULL default now(), expiry tstz NOT NULL, status vc default 'Aktif' (CHECK: Aktif/Logout/Expired), ip_address vc, created_at tstz default now().
+Catatan `data_estimasi`:
+- Semua kolom yang dipakai `api/estimasi.js` ada.
+- **Tidak ada `is_tidak_panen`**, dan nama kolomnya `tk_panen_hk`, bukan `tk_panen`.
+- Jadi status toggle Restan memang tidak punya tempat simpan (BR-22 / Q-BR-4), dan `is_tidak_panen` di spesifikasi B11 benar-benar kolom baru.
 
-**`delete_requests`** — id int4 PK (seq), region vc NOT NULL, tanggal date NOT NULL, jam vc (nullable), type vc NOT NULL, status vc default 'PENDING', requested_at tstz default CURRENT_TIMESTAMP, resolved_at tstz, resolved_by vc.
-→ Sudah punya `resolved_at`/`resolved_by`; **tidak** punya `decided_by`/`decided_at` yang diminta spesifikasi Fase 2 (dipenuhi dengan memakai ulang `resolved_*`, atau menambah kolom — catat di `decisions.md`). Kolom `jam` berarti satu permohonan bisa menyasar satu jam realisasi.
+**`sesi_aktif`**
+- id int8 PK (seq);
+- region vc NOT NULL;
+- token text NOT NULL;
+- login_time tstz NOT NULL default now();
+- expiry tstz NOT NULL;
+- status vc default 'Aktif', dengan CHECK Aktif/Logout/Expired;
+- ip_address vc;
+- created_at tstz default now().
 
-**`unlock_requests`** — id int4 PK (seq), region text NOT NULL, tanggal date NOT NULL, status text default 'PENDING', requested_at tstz NOT NULL default now(), resolved_at tstz, resolved_by text.
-→ **Tanpa kolom `type`.** Secara desain hanya untuk buka realisasi, tetapi `api/estimasi.js:144` ikut membacanya untuk estimasi. Inilah inti R-19.
+**`delete_requests`**
+- id int4 PK (seq);
+- region vc NOT NULL;
+- tanggal date NOT NULL;
+- jam vc (nullable);
+- type vc NOT NULL;
+- status vc default 'PENDING';
+- requested_at tstz default CURRENT_TIMESTAMP;
+- resolved_at tstz;
+- resolved_by vc.
 
-**`data_kebun_tk`** — id int4 PK (**tanpa default** → id diisi aplikasi), cro vc, region vc NOT NULL, region_raw vc, nama_kebun vc NOT NULL, name_tag vc, luasan num default 0, req_tk int4 default 0, tk_mei int4, tk_juni int4, target_juli int4, target_agustus int4, tk_juli int4, tk_agustus int4, updated_by vc default 'SYSTEM', updated_at tstz, created_at tstz, target_september int4, tk_september int4, target_oktober int4 default 0.
-→ TK aktual s.d. September; target s.d. Oktober. Kolom `tk_juli`/`tk_agustus` **ada** — jadi jalur simpan-penuh di hotfix G2 cocok dengan skema (lihat §9). `id` tanpa sequence = `addKebun` harus menghitung id sendiri (risiko balapan, sesuai legacy).
+Catatan `delete_requests`:
+- Sudah ada `resolved_at`/`resolved_by`, tetapi **belum ada** `decided_by`/`decided_at` yang diminta spesifikasi Fase 2. Pilihannya memakai ulang kolom `resolved_*` atau menambah kolom baru; keputusannya dicatat di `decisions.md`.
+- `requestRevision` mengisi `jam = null` (`api/unlockRequest.js:36`).
 
-**`database_palmops`** — id int8 PK (seq), tanggal date NOT NULL, region vc NOT NULL, tonase num NOT NULL default 0, created_at tstz default now(). Unique (tanggal, region).
+**`unlock_requests`**
+- id int4 PK (seq);
+- region text NOT NULL;
+- tanggal date NOT NULL;
+- status text default 'PENDING';
+- requested_at tstz NOT NULL default now();
+- resolved_at tstz;
+- resolved_by text.
 
-**`laporan_realisasi_panen`** — tanggal date **PK**, data jsonb NOT NULL, created_at tstz NOT NULL default utc now(). Satu baris = satu tanggal.
+Catatan `unlock_requests`: **tidak ada kolom `type`**. Karena itu satu persetujuan membuka realisasi **dan** estimasi untuk (region, tanggal) itu (BR-12), dan panel admin tidak bisa membedakan jenisnya (§8).
 
-**`target_challenge_bulanan`** — bulan vc **PK**, data jsonb NOT NULL, created_at tstz NOT NULL default utc now(). Satu baris = satu bulan.
+**`data_kebun_tk`**
+- id int4 PK, **tanpa default** (id diisi aplikasi);
+- cro vc;
+- region vc NOT NULL;
+- region_raw vc;
+- nama_kebun vc NOT NULL;
+- name_tag vc;
+- luasan num default 0;
+- req_tk int4 default 0;
+- tk_mei, tk_juni int4;
+- target_juli, target_agustus, tk_juli, tk_agustus int4;
+- updated_by vc default 'SYSTEM';
+- updated_at, created_at tstz;
+- target_september, tk_september, target_oktober int4.
 
-**`surat`** — id uuid PK (gen_random_uuid), nomor_surat text NOT NULL, jenis_surat text NOT NULL, perihal text NOT NULL, status text default 'menunggu' (CHECK 12 nilai), file_url text NOT NULL, dibuat_oleh uuid FK→profiles, regional_pengirim text, created_at tstz, tujuan text, catatan text, tanggal_surat date, link_redirect text, asal_surat text.
+Catatan `data_kebun_tk`:
+- TK aktual tercatat sampai September, target sampai Oktober.
+- Kolom `tk_juli`/`tk_agustus` **ada** (lihat §10, G2).
+- Karena `id` tanpa sequence, `addKebun` menghitung id sendiri (BR-36), sehingga ada risiko bentrok id saat dua penambahan bersamaan.
 
-**`log_tracking`** — id uuid PK, surat_id uuid FK→surat (CASCADE), status_update text NOT NULL, catatan text, created_by uuid FK→profiles, created_at tstz.
+**`database_palmops`**
+- id int8 PK (seq);
+- tanggal date NOT NULL;
+- region vc NOT NULL;
+- tonase num NOT NULL default 0;
+- created_at tstz;
+- unique (tanggal, region).
 
-**`audit_log`** — id int8 PK (seq), region vc NOT NULL, action vc NOT NULL, detail text, created_at tstz default now(). Index pada `created_at` dan `region`.
+**`laporan_realisasi_panen`** — tanggal date **PK**, data jsonb NOT NULL, created_at tstz NOT NULL default utc now().
 
-**`rate_limit`** — id int4 PK (seq), region vc UNIQUE NOT NULL, attempts int4 default 0, window_start tstz default now(), updated_at tstz default now().
+**`target_challenge_bulanan`** — bulan vc **PK**, data jsonb NOT NULL, created_at tstz NOT NULL default utc now().
 
-**`profiles`** — id uuid PK FK→auth.users (CASCADE), email text UNIQUE NOT NULL, nama_lengkap text NOT NULL, role `user_role` default 'regional', nama_regional text, created_at tstz.
+**`surat`**
+- id uuid PK;
+- nomor_surat, jenis_surat, perihal text NOT NULL;
+- status text default 'menunggu', dengan CHECK 12 nilai;
+- file_url text NOT NULL;
+- dibuat_oleh uuid FK → profiles;
+- regional_pengirim, tujuan, catatan, link_redirect, asal_surat text;
+- tanggal_surat date;
+- created_at tstz.
 
-## 3. Constraint (A2) dan index (A3)
+**`log_tracking`**
+- id uuid PK;
+- surat_id uuid FK → surat (CASCADE);
+- status_update text NOT NULL;
+- catatan text;
+- created_by uuid FK → profiles;
+- created_at tstz.
 
-Unique keys:
-- `regions.region_name`, `rate_limit.region`.
-- `data_estimasi` (tanggal, region) — `unique_estimasi_tanggal_region`.
-- `database_palmops` (tanggal, region) — `unique_palmops_tanggal_region`.
-- **`database_input`: tidak ada.** Hanya PK (id). Aturan "satu jam satu baris, revisi lewat Hapus Jam Ini" (BR-15) **hanya ditegakkan di kode**, bukan di database. → Fase 2 harus menambah unique (region, tanggal, jam) **setelah** dedupe (blok C1/C2).
+**`audit_log`**
+- id int8 PK (seq);
+- region vc NOT NULL;
+- action vc NOT NULL;
+- detail text;
+- created_at tstz;
+- index pada `created_at` dan `region`.
 
-CHECK:
-- `sesi_aktif.status` ∈ {Aktif, Logout, Expired}.
-- `surat.status` ∈ 12 nilai (menunggu, diproses, selesai, ditolak, dan status alur Asta/APN/keuangan).
-- **`delete_requests.type`: tidak ada CHECK.** Jadi `UNLOCK_REALISASI` sah di level DB; CHECK sempit di `schema.sql` repo memang tak pernah dipakai di produksi (bagian dari R-14b).
+**`rate_limit`**
+- id int4 PK (seq);
+- region vc UNIQUE NOT NULL;
+- attempts int4 default 0;
+- window_start, updated_at tstz.
 
-FK (semua ke jalur Supabase Auth yang tak terpakai): `profiles.id`→auth.users, `surat.dibuat_oleh`→profiles, `log_tracking.surat_id`→surat, `log_tracking.created_by`→profiles.
+**`profiles`**
+- id uuid PK FK → auth.users (CASCADE);
+- email text UNIQUE NOT NULL;
+- nama_lengkap text NOT NULL;
+- role `user_role` default 'regional';
+- nama_regional text;
+- created_at tstz.
 
-Index: tiap tabel data punya index pada `region` dan `tanggal`; `database_input` juga punya `(tanggal, region)`; `unlock_requests` punya `(region, tanggal)`; `sesi_aktif` punya index pada `token` dan `status`. **Tak ada** index di `delete_requests` selain PK.
+## 3. Constraint (A2), index (A3), trigger (A4)
 
-## 4. RLS dan policy (A7, A8)
+**Unique:**
+- `regions.region_name`;
+- `rate_limit.region`;
+- `data_estimasi` (tanggal, region);
+- `database_palmops` (tanggal, region).
 
-Semua 15 tabel **mengaktifkan RLS** (`rls_enabled = true`, `rls_forced = false`). Hak tabel ke role `anon`/`authenticated` terbuka lebar, jadi yang menentukan adalah policy. API memakai service role (melewati RLS), sehingga policy di bawah berpengaruh hanya bila seseorang memakai **anon key** lewat PostgREST.
+**`database_input` tidak punya unique**, hanya PK (id):
+- Aturan "satu jam satu baris, revisi lewat Hapus Jam Ini" (BR-15) hanya ditegakkan kode (`api/realisasi.js:180`).
+- Pengecekan itu dilakukan per nama region, sehingga tidak menahan baris kembar yang tersimpan di bawah nama region lain (§7).
 
-- **Tertutup** (policy `block_public`, `USING false`): `audit_log`, `data_estimasi`, `database_input`, `database_palmops`, `rate_limit`, `regions`, `sesi_aktif`. Anon key tidak bisa baca/tulis — benar.
-- **`data_kebun_tk`: TERBUKA.** Policy publik `SELECT`, `INSERT`, `UPDATE` (`USING true` / `WITH CHECK true`), tanpa `block_public`. **Siapa pun dengan anon key dapat membaca, menambah, dan mengubah baris TK langsung** tanpa lewat API. Tidak ada policy DELETE. → **R-09 terkonfirmasi.** Ini memperberat R-02 (API kebunTK tanpa auth): tabelnya pun terbuka di lapis database. Perbaikan di Fase 2/Cutover.
-- **`log_tracking`, `profiles`, `surat`**: policy berbasis `auth.uid()` dan `profiles.role`. Karena `profiles` kosong dan aplikasi tak memakai Supabase Auth, policy ini praktis tidak pernah lolos lewat anon key (aman), tetapi juga berarti desain RLS SAP tidak berfungsi sebagaimana ditulis.
-- **`delete_requests`, `unlock_requests`, `target_challenge_bulanan`, `laporan_realisasi_panen`**: policy **belum terlihat** (A8 terpotong). RLS-nya aktif; perlu memastikan apakah `block_public` atau tanpa policy (keduanya menutup anon). → menunggu sisa blok A8.
+**CHECK:**
+- `sesi_aktif.status` ∈ {Aktif, Logout, Expired};
+- `surat.status` ∈ 12 nilai alur SAP;
+- `delete_requests.type` **tidak punya CHECK**. Jadi `UNLOCK_REALISASI` sah di database, dan CHECK sempit di `schema.sql` tidak pernah berlaku di produksi (R-14b).
 
-## 5. Fungsi (A5) dan trigger (A4)
+**FK:** keempatnya mengarah ke jalur Supabase Auth yang tidak dipakai, yaitu `profiles.id` → auth.users, `surat.dibuat_oleh` → profiles, `log_tracking.surat_id` → surat, dan `log_tracking.created_by` → profiles.
 
-Tiga fungsi, semua **SECURITY DEFINER**, pemilik `postgres`, dan **tanpa `search_path` tetap** (`config = null`):
+**Index:**
+- tabel data punya index pada `region` dan `tanggal`;
+- `database_input` juga punya index (tanggal, region);
+- `unlock_requests` punya index (region, tanggal);
+- `sesi_aktif` punya index pada `token` dan `status`;
+- `delete_requests` hanya punya index PK.
+
+**Trigger:** tidak ada di schema `public`. Kolom `updated_at` dan isi `audit_log` diisi aplikasi.
+
+## 4. RLS, policy, storage (A7–A9)
+
+Ke-15 tabel **mengaktifkan RLS**. Role `anon` dan `authenticated` punya semua hak tabel (bawaan Supabase), jadi policy yang menentukan akses. API memakai service role yang melewati RLS. Akibatnya policy di bawah hanya berpengaruh bagi yang memakai **anon key**, dan **tidak ada halaman legacy yang memakainya**: tidak ada `createClient`, panggilan REST, atau panggilan storage di berkas HTML mana pun.
+
+| Kelompok | Tabel | Akses anon key |
+|---|---|---|
+| Policy `block_public` (`USING false`) | `audit_log`, `data_estimasi`, `database_input`, `database_palmops`, `rate_limit`, `regions`, `sesi_aktif` | Tertutup |
+| RLS aktif tanpa policy (tolak semua) | `delete_requests`, `unlock_requests`, `target_challenge_bulanan`, `laporan_realisasi_panen` | Tertutup |
+| Policy publik SELECT/INSERT/UPDATE (`USING true`) | `data_kebun_tk` | **Terbuka: baca, tambah, ubah** (R-09) |
+| Policy berbasis `auth.uid()` | `surat` (4 policy), `log_tracking` (3), `profiles` (1) | Tertutup bagi anon; berlaku bagi pemilik akun Supabase Auth (R-33) |
+
+**Storage:**
+- Bucket `berkas_surat` dan `surat_files` sama-sama **publik**, tanpa batas ukuran dan tipe berkas (A9).
+- Policy `storage.objects`:
+  - "Allow Uploads" (INSERT, role public, bucket `surat_files`);
+  - "Public Access" (SELECT, role public, bucket `surat_files`).
+- Akibatnya **siapa pun bisa mengunggah berkas apa saja ke `surat_files` dan melihat daftar isinya.**
+- Unggahan aplikasi sendiri lewat `api/sap.js` dengan service role. Tampilan berkas memakai URL publik (`getPublicUrl`), yang tidak membutuhkan policy SELECT.
+
+## 5. Fungsi (A5, A6)
+
+Ketiga fungsi bersifat **SECURITY DEFINER**, dimiliki `postgres`, dan **tanpa `search_path` tetap**. Masing-masing bisa dieksekusi PUBLIC, `anon`, `authenticated`, dan `service_role`.
 
 | Fungsi | Status |
 |---|---|
-| `check_password(p_region text, p_password text)` | EXECUTE dimiliki PUBLIC, anon, authenticated, service_role (A5 acl + A6). **R-08 terkonfirmasi** |
-| `cleanup_expired_sessions()` | Ada, grant sama. Jelas **tak terjadwal**: 18.600 baris `sesi_aktif` menumpuk |
+| `check_password(p_region text, p_password text)` | Bisa dipanggil lewat RPC dengan anon key, tanpa rate limit. **R-08 terkonfirmasi** (A6) |
+| `cleanup_expired_sessions()` | Ada, tetapi tidak pernah terjadwal (tanpa `pg_cron`, B3) |
 | `handle_new_user()` | Pemicu Supabase Auth; mati karena `profiles` kosong |
 
-- **R-08 terkonfirmasi (A6):** `anon` dan `authenticated` dapat `EXECUTE check_password`. Fungsi ini membandingkan password lewat RPC dan bisa dipanggil memakai anon key tanpa rate limit (`rate_limit` kosong). Prioritas tinggi. Perbaikan: REVOKE dari anon/authenticated/PUBLIC (Fase 2), dan rotasi password (langkah manual c).
-- `search_path` null pada fungsi SECURITY DEFINER adalah praktik yang perlu diperbaiki saat menulis ulang fungsi di Fase 2 (set `search_path = public, pg_temp`).
+Penanganan:
+- **G3 (usulan):** REVOKE EXECUTE dari PUBLIC/anon/authenticated. API tetap jalan karena `service_role` punya grant sendiri.
+- **Fase 2:** set `search_path` tetap saat fungsi ditulis ulang. Untuk sekarang hal ini ditunda karena isi fungsi produksi belum terlihat (menunggu dump).
 
-Trigger (A4): **tidak ada.** Kolom `updated_at` diisi aplikasi, bukan trigger. Tabel `audit_log` juga diisi aplikasi, bukan trigger DB.
+## 6. Akun dan sesi (B1–B3)
 
-## 6. Akun: 24 baris vs 26 nama di kode (menunggu blok B1)
+**Akun (B1, B2):**
+- 24 dari 26 nama di `api/auth.js` `LOCAL_REGIONS_MAP` ada di `regions` dan semuanya aktif.
+- Yang tidak ada: **`QC admin`** dan **`Sumatera Utara 2 Ex Torganda`**. Keduanya **hanya bisa login lewat fallback password plaintext** (`api/auth.js:80-90`, R-01).
+- Tidak ada baris `regions` yang tidak dikenal kode (B2 = 0).
+- Nama `Sumatera Utara 2 Ex Torganda` pernah dipakai untuk mengajukan permohonan pada 2026-07-21 (D4), tetapi tidak punya baris di tabel data mana pun (C4). Lihat Q-BR-8.
+- **Akibat untuk G2 butir 5 (hapus fallback):** penghapusan baru aman setelah `QC admin` dimasukkan ke `regions` dengan hash password baru dan Q-BR-8 diputuskan. Kalau tidak, kedua akun terkunci.
 
-`regions` berisi **24** baris, sedangkan `api/auth.js` `LOCAL_REGIONS_MAP` menyebut **26** akun. Dua akun ada di kode tetapi mungkin tidak ada di tabel — kandidat: alias `Sumut 2` / `Sumatera Utara 2 Ex Torganda` (Q-BR-8) dan `QC admin`. Akun yang hanya ada di map **hanya bisa login lewat fallback plaintext** (R-01).
+**Sesi (B3):**
 
-→ **Blok B1 wajib sebelum G2 butir 5** (menghapus fallback `LOCAL_REGIONS_MAP`). Menghapusnya tanpa tahu dua akun yang hilang dapat mengunci pengguna. Harap paste blok B1, B2, B3.
+| Status | Sesi | Sudah lewat expiry |
+|---|---|---|
+| Aktif | 4.169 | 4.149 |
+| Logout | 14.164 | 14.131 |
+| Expired | 267 | 267 |
 
-## 7. Temuan baru dari run ini
+Hanya 20 sesi yang benar-benar aktif. Status tidak pernah diubah menjadi `Expired` karena pembersihan tidak berjalan. Ini tidak memperpanjang sesi, sebab JWT tetap kedaluwarsa setelah 8 jam, tetapi tabelnya terus membesar (R-34).
 
-- **`audit_log` (9.721 baris)** tidak ada di PRD maupun di inventaris sebelumnya. Perlu dicek di kode: siapa yang menulisnya, action apa saja, dan apakah ikut dimigrasi. Ditambahkan ke backlog pemeriksaan.
-- **`sesi_aktif` menumpuk (18.600 baris)** karena `cleanup_expired_sessions()` tak terjadwal. Bukan celah keamanan, tetapi membebani setiap `verifyToken`. Di v2: sesi di cookie + pembersihan terjadwal.
-- **Fungsi SECURITY DEFINER tanpa `search_path`.**
+## 7. Kualitas data (C1–C4)
 
-## 8. Kode/skema mati yang terbukti
+| Cek | Hasil |
+|---|---|
+| Duplikat `database_input` (region, tanggal, jam) | **6 grup** |
+| Duplikat `data_estimasi` (region, tanggal) | 0 |
+| `jam` bukan HH.MM / di luar 12 slot legacy | 0 / 0 dari 20.249 baris |
+| Tonase < 0, > 5000, atau null | 0 |
+| Region data yang tidak ada di `regions` | 0 (realisasi dan estimasi) |
+| Nilai estimasi negatif | 0 |
 
-- `rate_limit` (0 baris) dan konstanta rate limit di `auth.js` tak terpakai → **R-06 terkonfirmasi**: login tak dibatasi.
-- `profiles` (0 baris) + `handle_new_user` + FK ke `auth.users` → jalur Supabase Auth tidak dipakai. Policy `surat`/`log_tracking` yang bergantung padanya tidak aktif.
+- **Slot jam:** data produksi mengikuti persis 12 slot legacy (06.00–16.00 dan 17.30). Ini menegaskan bahwa slot 07.00–18.00 di spesifikasi salah (BR-07).
+- **Duplikat (C2):** keenam grup milik **Sumut 2 pada 2026-10-01**, yaitu jam 08.00, 09.00, 10.00, 11.00, 13.00, dan 15.00. Tiap grup punya dua salinan dengan tonase **identik**.
+  - Salinan pertama ber-ID 28781–28784, 28800, 28851, tersebar seperti input per jam biasa.
+  - Salinan kedua ber-ID berurutan **28891–28896**, jadi disisipkan sekaligus.
+  - Penyebab: **TIDAK DIKETAHUI**. Petunjuknya: commit `7271267` pada tanggal yang sama ("harmonize Sumut 2 region key"), dan akun `Sumatera Utara 2 Ex Torganda` yang hanya hidup lewat fallback. Untuk memastikan, perlu `created_at` keenam baris itu.
+  - Dampak: total harian Sumut 2 pada 2026-10-01 mungkin terhitung dua kali (+129,29), tergantung cara penjumlahan. Hal ini dibuktikan lewat golden snapshot tanggal itu (R-32).
+  - Rencana Fase 2: hapus ID 28891–28896 (nilainya identik, jadi tidak ada data yang hilang), lalu tambahkan unique (region, tanggal, jam). SQL-nya dilaporkan dulu sebelum dijalankan.
+- **Ejaan region (C4):** 23 region regional konsisten di `database_input`, `data_estimasi`, dan `database_palmops`. `database_palmops` berisi tepat 62 baris per region.
 
-## 9. Konsekuensi untuk G2 dan Fase 2
+## 8. Permohonan dan R-19 (D1–D4)
 
-**G2 (hotfix kebunTK):** kolom `tk_juli` dan `tk_agustus` **ada** di `data_kebun_tk`, jadi jalur simpan-penuh `updateTK` di hotfix akan berhasil dan cabang "simpan sebagian" jarang terpakai. Ini memperkuat kesiapan G2 untuk diuji di staging. Namun R-09 (tabel terbuka untuk anon key) **tidak** ditutup oleh G2 — itu ranah Fase 2.
+| Tabel | Jenis | APPROVED | REJECTED | PENDING |
+|---|---|---|---|---|
+| `delete_requests` | ESTIMASI | 37 | 1 | 0 |
+| `delete_requests` | REALISASI | 59 | 4 | 0 |
+| `delete_requests` | UNLOCK_REALISASI | 84 | 3 | 0 |
+| `unlock_requests` | (tanpa jenis) | 230 | 10 | 0 |
 
-**Fase 2 (baseline + perbaikan), berdasarkan skema nyata:**
-- **Lewati** (sudah ada): unique `data_estimasi` (tanggal, region); index (region)/(tanggal) di tabel data; `restan_lalu`.
-- **Tambah:** unique `database_input` (region, tanggal, jam) **setelah dedupe**; CHECK tonase 0–5000 dan format jam; kolom `is_tidak_panen` di `data_estimasi`; `regions.cro` dan `regions.timezone` (belum ada di `regions`; `cro` baru ada di `data_kebun_tk`); REVOKE EXECUTE `check_password`; pembersihan `block_public`/RLS untuk `data_kebun_tk`.
-- **Putuskan di `decisions.md`:** pakai ulang `resolved_*` atau tambah `decided_*` di `delete_requests`; satukan `unlock_requests` ke pola `delete_requests` setelah cutover (akar R-19).
+- **D3 = 0:** tidak ada pasangan kembar (region, tanggal) yang statusnya berbeda di kedua tabel.
+- **D4 = 30**, semuanya bertanggal 2026-07-20/21 dan diputus 21–22 Juli. Baris ini berasal dari masa commit `9e64ed4` (2026-07-21), ketika simpan realisasi masih memeriksa `delete_requests` UNLOCK_REALISASI. Sejak `ed5cd43` dan `2448ef4` (2026-07-24), pemeriksaannya membaca `unlock_requests` (`api/realisasi.js:132-137`).
+  - Jadi ke-30 baris itu **bukan** revisi yang disetujui tetapi tetap terkunci menurut aturan yang berlaku saat itu.
+  - Sesudah 2026-07-24 tidak ada baris D4.
+
+**R-19, dinilai ulang dengan kode dan data:**
+- **Mekanismenya terkonfirmasi di kode.** `requestRevision` menulis ke kedua tabel dengan `jam` kosong (`api/unlockRequest.js:36-43`).
+- **Kembaran tersembunyi.** Panel admin men-dedupe dengan kunci `region_tanggal_jam` (`FORMAT_ESTIMASI_PANEN.html:1875`) dan mendahulukan `delete_requests`, sehingga kembaran di `unlock_requests` tidak tampil.
+- **Persetujuan pertama tidak membuka simpan.** "Buka Real. Produksi" hanya mengubah `delete_requests` (`api/deleteRequest.js:74-78`). Simpan masih ditolak, padahal `checkRevisionStatus` sudah membalas APPROVED (`api/unlockRequest.js:72-82`).
+- **Kembaran muncul lagi dengan label salah.** Setelah persetujuan pertama, kembaran tampil sebagai **"Buka Est. Panen"** karena `unlock_requests` tidak punya `type` (`FORMAT_ESTIMASI_PANEN.html:1859-1863`). Baru setelah item itu disetujui, simpan realisasi terbuka.
+- **Data produksi:** tidak ada PENDING dan D3 = 0. Artinya admin selama ini menyetujui (atau menolak) kedua item, dan tidak ada revisi yang tertinggal terkunci.
+- **Dampak tersisa:**
+  - setiap revisi butuh dua persetujuan, dan item keduanya salah label;
+  - ada jeda ketika regional melihat status APPROVED tetapi simpan ditolak;
+  - selama kembaran masih PENDING, permohonan buka estimasi untuk tanggal yang sama ditolak (`api/unlockRequest.js:48-53`).
+  - Karena itu R-19 diturunkan dari Tinggi menjadi **Sedang**.
+
+## 9. Modul (E1–E5)
+
+- **TK Panen (E1, E2):**
+  - 754 kebun dengan total luasan **443.362,62 ha** dan id tertinggi 896. Angka ini menjadi baseline "tabel lama" untuk laporan migrasi data Fase 2.
+  - Kunci region kebun berupa 23 nama pendek (`Aceh`, `Babel`, `Kaltara`, `Sumsel`, …), berbeda dari nama di `regions`. Karena itu perlu pemetaan `kebun_region_key` (B13).
+  - `Kalbar 1` (62 kebun) menggabungkan Kalbar 1A dan 1B (BR-36).
+  - **`Papua Selatan`**: 10 kebun dengan luasan 0 dan kebutuhan TK 0, tanpa akun dan tanpa data panen (Q-BR-11).
+- **SAP (E3):** hanya ada 2 surat (dari `ADMIN` dan `CRO I`) dan 3 log. Modulnya aktif tetapi nyaris tidak dipakai.
+- **Target Challenge dan LHP (E4):** target hanya untuk Jul–Sep 2026 (Q-BR-10). LHP ada untuk 91 tanggal antara 2026-07-18 dan 2026-10-24.
+- **Cakupan 45 hari terakhir (E5):**
+  - Hari kerja umumnya 20–23 dari 23 region mengisi realisasi, dan 23 region mengisi estimasi.
+  - Hari Minggu lebih rendah: 13–17 region untuk realisasi.
+  - LHP tidak ada untuk 2026-09-23, 2026-10-08, dan 2026-10-14. LHP 25 dan 26 Oktober juga belum dibuat.
+  - Tanggal golden snapshot dipilih dari data ini (`docs/golden-tests.md`).
+
+## 10. Konsekuensi untuk G2, G3, dan Fase 2
+
+**G2 (hotfix kebunTK):**
+- Kolom `tk_juli` dan `tk_agustus` ada, jadi jalur simpan-penuh `updateTK` cocok dengan skema produksi.
+- G2 butir 5 tertahan oleh §6.
+- R-09 (tabel terbuka untuk anon key) tidak ditutup oleh G2.
+
+**G3 (usulan, `docs/g3-db-hardening.sql`):** menutup R-08, R-09 (tabel dan storage), serta R-33 tanpa mengubah perilaku aplikasi legacy.
+- Diuji di PostgreSQL in-process dengan grant dan policy yang sama seperti produksi:
+  - sebelum G3, anon bisa memanggil `check_password`, membaca/menulis `data_kebun_tk`, serta mengunggah ke dan melihat daftar `surat_files`;
+  - sesudah G3, semuanya ditolak, sementara `service_role` (API) tetap punya semua hak yang dipakainya.
+- **Belum dijalankan** di database mana pun. Perlu izin pemilik dan diuji di staging dulu.
+
+**Fase 2, disusun berdasarkan skema nyata:**
+- **Lewati** (sudah ada): unique `data_estimasi` (tanggal, region); index (region)/(tanggal); kolom `restan_lalu`.
+- **Tambah:**
+  - dedupe ID 28891–28896, lalu unique `database_input` (region, tanggal, jam);
+  - CHECK tonase 0–5000 dan format jam (data sudah bersih);
+  - kolom `data_estimasi.is_tidak_panen`;
+  - kolom `regions.cro` dan `regions.timezone` (saat ini `cro` hanya ada di `data_kebun_tk`);
+  - akun `QC admin` di `regions`;
+  - `search_path` tetap untuk fungsi SECURITY DEFINER.
+- **Putuskan di `decisions.md`:**
+  - memakai ulang `resolved_*` atau menambah `decided_*` di `delete_requests`;
+  - menyatukan kedua tabel permohonan, yang merupakan akar R-19;
+  - zona waktu WIT bila Papua Selatan diaktifkan (Q-BR-11).
