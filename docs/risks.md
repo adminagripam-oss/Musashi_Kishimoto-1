@@ -17,19 +17,19 @@ Fase 0, tugas 5. Basis kode: commit `661b817`. Legacy tetap menjadi produksi sel
 
 | ID | Tingkat | Temuan | Bukti | Ditangani di |
 |---|---|---|---|---|
-| R-01 | Kritis | Password plaintext ke-26 akun ada di kode dan riwayat git; dipakai sebagai fallback login bila Supabase error atau region tidak ditemukan | `api/auth.js:8-35`, `:80-90`; seed `supabase/schema.sql` (sekitar baris 125–151); kemungkinan juga `Code.js:1` | Rotasi password (langkah manual c) + G2 butir 5 |
+| R-01 | Kritis | Password plaintext ke-26 akun ada di kode dan riwayat git; dipakai sebagai fallback login bila Supabase error atau region tidak ditemukan. **Repo GitHub publik** (API GitHub: `visibility=public`), sehingga berkas tersebut dapat dibaca umum — anggap seluruh kredensial di repo sudah bocor | `api/auth.js:8-35`, `:80-90`; seed `supabase/schema.sql` (sekitar baris 125–151); kemungkinan juga `Code.js:1` | Rotasi password (langkah manual c) + G2 butir 5; jadikan repo privat |
 | R-02 | Kritis | `api/kebunTK.js` **tanpa autentikasi**. Siapa pun dapat `updateTK`/`addKebun`/`deleteKebun` dengan mengirim `region=ADMIN`. Cek region pada `addKebun` selalu lolos karena identitas pengguna dan region tujuan dibaca dari parameter yang sama | `api/kebunTK.js:4` (import tidak dipakai), `:68-70`, `:165-406`, `:348` | G2 butir 1; Fase 3C |
 | R-03 | Tinggi | Endpoint baca tanpa token: realisasi `getData`/`getRunningTextData`, estimasi `getEstimasi`, palmops `get`, `getTarget`, `getLaporan`, `getKebun` | `api/realisasi.js:65`; `api/estimasi.js:43`; `api/palmops.js:15`; `api/targetChallenge.js:20`; `api/laporanRealisasi.js:20`; `api/kebunTK.js:107` | Fase 3 (endpoint publik bertoken baca-saja; sisanya wajib sesi) |
 | R-04 | Tinggi | IDOR (lihat daftar di bawah tabel) | `api/sap.js:71`, `:180-212`; `api/vendor.js:46-134`, `:155-168` | G2 butir 4; Fase 3C |
 | R-05 | Tinggi | **Password dikirim lewat GET** (query string) karena semua request `jsonpRequest` memakai GET. Server dev mencetak `req.url` ke log, dan log Vercel kemungkinan juga mencatatnya. Token sesi dikirim di URL iframe SAP dan halaman SAP juga membaca `localStorage` | `login.html:4659-4673`, `:4920`; `dev-server.js:41-44`; `login.html:5150`; `sap_admin.html:335`, `:346-358` | G2 butir 3; Fase 3A (POST + cookie httpOnly) |
-| R-06 | Tinggi | Rate limit login tidak berjalan; konstanta ada tetapi tidak dipakai | `api/auth.js:5-6` | Fase 3A (tabel `login_attempts`) |
+| R-06 | Tinggi (terkonfirmasi) | Rate limit login tidak berjalan; konstanta ada tetapi tidak dipakai. Audit: tabel `rate_limit` **0 baris** | `api/auth.js:5-6`; audit blok 0/A1 (`docs/db-schema.md` §8) | Fase 3A (tabel `login_attempts`) |
 | R-07 | Tinggi | **Bug heartbeat.** Klien mengirim action `refreshToken`, server hanya mengenal `refresh`. Akibatnya muncul alert "Sesi Anda berakhir: Action tidak dikenal." dan pengguna regional **dipaksa logout 30 menit setelah login** | `login.html:4242`, `:5015-5030`; `api/auth.js:123-129` | G2 butir 2 |
-| R-08 | Tinggi (perlu verifikasi) | `check_password` bersifat SECURITY DEFINER tanpa REVOKE. Bila EXECUTE masih dimiliki `anon`, fungsi ini bisa dipakai menebak password lewat RPC tanpa rate limit | `supabase/schema.sql:156-175` | Fase 0 tugas 6 (cek grant); Fase 2 (REVOKE) |
-| R-09 | Tinggi (perlu verifikasi) | Bucket `surat_files` publik dengan policy upload terbuka untuk siapa pun. Tabel `data_kebun_tk` punya policy publik SELECT/INSERT/UPDATE (dapat ditulis memakai anon key) | `supabase_setup_storage.sql:2-14`; `supabase/setup_kebun_tk_table.sql:33-36` | Fase 0 tugas 6 (cek policy aktif); Fase 2 / Cutover |
+| R-08 | **Tinggi (terkonfirmasi)** | `check_password` SECURITY DEFINER, EXECUTE dimiliki `anon` dan `authenticated` (audit A6). Dapat dipanggil lewat RPC memakai anon key, tanpa rate limit (R-06). Fungsi juga tanpa `search_path` tetap | audit blok A5/A6 (`docs/db-schema.md` §5); `supabase/schema.sql:156-175` | Fase 2 (REVOKE dari anon/authenticated/PUBLIC + set `search_path`); rotasi password (langkah c) |
+| R-09 | **Tinggi (terkonfirmasi untuk `data_kebun_tk`)** | Tabel `data_kebun_tk` punya policy publik SELECT/INSERT/UPDATE (`USING true`), tanpa `block_public`, sehingga dapat dibaca/ditulis memakai anon key lewat PostgREST (audit A8). Memperberat R-02. Status bucket `surat_files` menunggu blok A9 | audit blok A7/A8 (`docs/db-schema.md` §4); `supabase/setup_kebun_tk_table.sql:33-36` | Fase 2 / Cutover (`block_public` + REVOKE) |
 | R-10 | Sedang | Upload base64 hingga 50 MB lewat JSON melebihi batas body Vercel Function (4,5 MB). Nama objek ditentukan klien dengan `upsert: true`, sehingga berkas lain bisa tertimpa | `api/sap.js:45-68`, `:133-139` | Fase 3C (*signed upload URL*, nama dari server) |
 | R-11 | Sedang | CSP mengizinkan `unsafe-eval`/`unsafe-inline` karena Babel standalone; React *development build* dan Tailwind Play CDN dipakai di produksi | `vercel.json:52`; `laporan_produksi.html:63`, `:134-138`; `rekap_tk_panen.html:31-35` | Fase 1/9 (build Vite, CSP ketat) |
 | R-12 | Sedang | `xlsx@0.18.5` punya celah *prototype pollution* dan ReDoS, padahal dipakai untuk mem-parse berkas unggahan pengguna | `laporan_produksi.html:144`, `:2152`, `:3069`, `:3595`; `qc_admin.html:47`, `:802`; `FORMAT_ESTIMASI_PANEN.html:14`; `package.json` | Fase 6 (SheetJS ≥ 0.20.3 dari cdn.sheetjs.com atau exceljs) |
-| R-16 | **Kritis (perlu verifikasi)** | Tanpa `.vercelignore`, berkas repo kemungkinan disajikan sebagai aset statis publik (daftar di bawah tabel) | `git ls-files`; tidak ada `.vercelignore` | Verifikasi oleh Anda: buka `https://agri-pam.id/Kode2.gs`. Bila status 200, tambahkan `.vercelignore` (usulan perluasan G2) dan rotasi secret terkait |
+| R-16 | **Kritis (terkonfirmasi)** | Tanpa `.vercelignore`, berkas sumber repo disajikan sebagai aset statis publik oleh domain produksi. Terkonfirmasi lewat pemeriksaan header (HEAD): beberapa berkas sumber membalas HTTP 200 sementara `.env` membalas 403. Nilai rahasia tidak dibaca | pemeriksaan HEAD ke domain produksi; tidak ada `.vercelignore` | **Segera:** tambahkan `.vercelignore` (usulan perluasan G2), jadikan repo privat, dan rotasi semua secret yang pernah ada di berkas itu (lihat R-01) |
 | R-17 | Sedang | Halaman SAP mengirim `postMessage({action:'closeSAP'}, '*')` tanpa target origin; perlu dicek apakah listener di parent memvalidasi `event.origin` | `sap_admin.html:376`; `sap_regional.html:196` | Fase 6 (tanpa iframe) |
 | R-18 | Rendah | `ip_address` sesi diambil dari parameter klien `ip` (hasil `api.ipify.org`), sehingga bisa dipalsukan | `api/auth.js:48`; `login.html:6707` | Fase 3A (IP dari proxy tepercaya) |
 
@@ -91,9 +91,11 @@ Rincian R-31 (kandidat usang):
 
 ## 5. Ringkasan prioritas
 
-1. **Segera (legacy, G2 / tindakan Anda):**
-   - verifikasi R-16 (berkas sumber terpapar);
-   - rotasi password dan secret: R-01, ditambah R-16 bila terbukti;
-   - hotfix R-02, R-07, R-05 (password lewat POST), R-04.
-2. **Fase 0 tugas 6–7 (staging):** buktikan atau bantah R-08, R-09, R-15, R-19 dan R-21 dengan data nyata.
+1. **Segera (legacy, tindakan Anda):**
+   - R-16 **terkonfirmasi**: tambahkan `.vercelignore` + jadikan repo privat;
+   - rotasi password dan secret: R-01 + semua secret di berkas yang terpapar R-16;
+   - hotfix G2: R-02, R-07, R-05 (password lewat POST), R-04.
+2. **Fase 0 (audit DB):**
+   - **terkonfirmasi:** R-06 (`rate_limit` kosong), R-08 (anon EXECUTE `check_password`), R-09 (`data_kebun_tk` terbuka);
+   - masih dibuktikan dengan data: R-15 (DevTools produksi), R-19 dan R-21 (blok C/D + golden snapshot), status bucket R-09 (blok A9).
 3. **Fase 2–3 (v2):** R-03, R-06, R-10, R-12, R-20, R-22, R-26, R-27.

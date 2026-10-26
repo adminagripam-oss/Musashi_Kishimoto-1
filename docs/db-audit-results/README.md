@@ -47,3 +47,23 @@ Tabel `unlock_requests`, `target_challenge_bulanan`, dan `laporan_realisasi_pane
 - **Pengujian:** dijalankan di PostgreSQL in-process (PGlite) dengan tabel tiruan berbentuk skema legacy.
   - Versi lama berjalan tanpa error pada tabel tiruan, sama seperti di database asli. Ini menunjukkan bentuk tabel tiruannya sesuai.
   - Versi baru menghasilkan 28 blok dalam urutan yang benar, dengan nilai yang sesuai data uji.
+
+## Run 2 — 2026-10-26
+
+- **Oleh:** pemilik produk, lewat Supabase SQL Editor, memakai `db-audit.sql` satu-query.
+- **Project:** TIDAK DIKETAHUI (produksi atau staging). `sesi_aktif` 18.600 baris dan data s.d. 2026-10-24 → kemungkinan produksi.
+- **Diterima:** blok **0, A1–A8** (A8 terpotong di tengah pada batas 50.000 karakter paste).
+- **Belum diterima:** **A9, A10, A11, B1–B3, C1–C4, D1–D4, E1–E5.**
+
+Hasil skema ditulis ke [`../db-schema.md`](../db-schema.md). Ringkasan:
+- 15 tabel; 10 di luar PRD §5. `audit_log` (9.721) temuan baru.
+- `database_input` **tanpa** unique (region, tanggal, jam) → dedupe + constraint di Fase 2.
+- **R-06 terkonfirmasi:** `rate_limit` kosong.
+- **R-08 terkonfirmasi:** `anon`/`authenticated` dapat EXECUTE `check_password` (A6).
+- **R-09 terkonfirmasi (`data_kebun_tk`):** policy publik SELECT/INSERT/UPDATE (A8).
+- `regions` 24 baris vs 26 akun di kode → blok B1 wajib sebelum G2 butir 5.
+- `profiles`/`rate_limit` kosong (jalur Supabase Auth & rate limit mati).
+
+### Yang masih diperlukan
+
+Paste sisa blok (A9–E5). Agar tidak kena batas 50.000 karakter lagi, jalankan ulang file yang sama tetapi batasi ke sisa blok — ganti baris `FROM (` pembuka sehingga hanya blok A9 ke bawah yang di-UNION, atau cukup kirim dua paste: satu untuk A9–B3 dan satu untuk C1–E5. Blok B1 (akun) dan A9 (bucket) paling diprioritaskan.
