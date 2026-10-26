@@ -142,3 +142,4 @@ Rincian BR-40 (mode tanggal admin):
 - **Q-BR-7** Realisasi (BR-15): tetap *insert* + "Hapus Jam Ini", atau boleh menimpa langsung?
 - **Q-BR-8** Akun resmi Sumut 2 di tabel `regions`: `Sumut 2` atau `Sumatera Utara 2 Ex Torganda` (BR-31)?
 - **Q-BR-9** Sesi tunggal (BR-05): cukup per browser seperti legacy, atau satu sesi aktif per region yang ditegakkan server?
+- **Q-BR-10** Target Challenge hanya berisi Juli–September 2026 (audit E4, `docs/db-audit-results/README.md`). Apakah target Oktober 2026 belum diunggah, atau program ini berhenti setelah September? Jawabannya menentukan apakah modul Target Challenge masih aktif dan ikut dimigrasi ke v2.

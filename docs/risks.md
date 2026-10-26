@@ -78,7 +78,7 @@ Rincian R-16 (berkas yang kemungkinan terpapar):
 
 Rincian R-14b (SQL tidak sinkron):
 - CHECK `delete_requests.type` hanya memuat REALISASI/ESTIMASI, padahal kode menulis UNLOCK_REALISASI;
-- `unlock_requests`, `target_challenge_bulanan`, `laporan_realisasi_panen` tidak ada di berkas SQL mana pun;
+- `unlock_requests`, `target_challenge_bulanan`, `laporan_realisasi_panen` tidak ada di berkas SQL mana pun, padahal ketiganya terbukti ada di database (audit run 1, `docs/db-audit-results/README.md`);
 - `profiles` + trigger `handle_new_user` (Supabase Auth) ada di `supabase_setup_sap.sql:7`, `:80`, tetapi API tidak memakai Supabase Auth.
 
 Rincian R-31 (kandidat usang):
