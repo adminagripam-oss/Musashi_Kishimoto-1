@@ -1984,13 +1984,26 @@
 
 
     var REGION_TO_CRO_MAP = {
+      // CRO I
       'Aceh': 'CRO I',
       'Sumut 1': 'CRO I',
+      'Sumatera Utara 1': 'CRO I',
       'Sumut 2': 'CRO I',
+      'Sumatera Utara 2': 'CRO I',
+      'Sumatera Utara 2 Ex Torganda': 'CRO I',
+      'Sumut 2 Ex Torganda': 'CRO I',
+
+      // CRO II
       'Riau 1': 'CRO II',
+
+      // CRO III
       'Riau 2': 'CRO III',
       'Riau 3': 'CRO III',
+
+      // CRO IV
       'Riau 4': 'CRO IV',
+
+      // CRO V
       'Sumbar': 'CRO V',
       'Sumatera Barat': 'CRO V',
       'Jambi': 'CRO V',
@@ -1998,35 +2011,99 @@
       'Bangka Belitung': 'CRO V',
       'Sumsel': 'CRO V',
       'Sumatera Selatan': 'CRO V',
+
+      // CRO VI
       'Kalbar 1': 'CRO VI',
+      'Kalbar 1A': 'CRO VI',
+      'Kalbar 1B': 'CRO VI',
       'Kalbar 2': 'CRO VI',
+      'Kalimantan Barat 1': 'CRO VI',
+      'Kalimantan Barat 1A': 'CRO VI',
+      'Kalimantan Barat 1B': 'CRO VI',
+      'Kalimantan Barat 2': 'CRO VI',
+
+      // CRO VII
       'Kalsel 1': 'CRO VII',
+      'Kalimantan Selatan 1': 'CRO VII',
       'Kalsel 2': 'CRO VII',
+      'Kalimantan Selatan 2': 'CRO VII',
       'Kaltara': 'CRO VII',
+      'Kalimantan Utara': 'CRO VII',
       'Kaltim': 'CRO VII',
+      'Kalimantan Timur': 'CRO VII',
+
+      // CRO VIII
       'Kalteng 1': 'CRO VIII',
+      'Kalimantan Tengah 1': 'CRO VIII',
       'Kalteng 3': 'CRO VIII',
+      'Kalimantan Tengah 3': 'CRO VIII',
+
+      // CRO IX
       'Kalteng 2': 'CRO IX',
+      'Kalimantan Tengah 2': 'CRO IX',
+
+      // CRO X
       'Sulteng': 'CRO X',
+      'Sulawesi Tengah': 'CRO X',
       'Sultra': 'CRO X',
+      'Sulawesi Tenggara': 'CRO X',
+
+      // CRO XI
+      'Papua': 'CRO XI',
       'Papua Selatan': 'CRO XI'
     };
 
-    function detectCroForRegion(regionName) {
+    function detectCroForRegion(regionName, existingList) {
       if (!regionName) return 'CRO I';
-      var rTrim = String(regionName).trim();
-      if (REGION_TO_CRO_MAP[rTrim]) return REGION_TO_CRO_MAP[rTrim];
-      var rLower = rTrim.toLowerCase();
-      var foundKey = Object.keys(REGION_TO_CRO_MAP).find(function (k) {
-        return k.toLowerCase() === rLower;
-      });
-      if (foundKey) return REGION_TO_CRO_MAP[foundKey];
-      if (globalTKData && Array.isArray(globalTKData)) {
-        var match = globalTKData.find(function (k) {
-          return k.region && k.region.toLowerCase() === rLower && k.cro;
+      var clean = String(regionName).trim();
+      var upper = clean.toUpperCase();
+      if (upper === 'ADMIN' || upper === 'ALL') return 'CRO I';
+
+      // 1. Direct dictionary lookup (exact & case-insensitive)
+      for (var rKey in REGION_TO_CRO_MAP) {
+        if (rKey.toLowerCase() === clean.toLowerCase()) {
+          return REGION_TO_CRO_MAP[rKey];
+        }
+      }
+
+      // 2. Lookup in existing list / active table dataset
+      var listToCheck = (Array.isArray(existingList) && existingList.length > 0) ? existingList : (typeof globalTKData !== 'undefined' && Array.isArray(globalTKData) ? globalTKData : []);
+      if (listToCheck.length > 0) {
+        var match = listToCheck.find(function (k) {
+          if (!k || !k.cro) return false;
+          var kReg = String(k.region || '').toLowerCase();
+          var cReg = clean.toLowerCase();
+          return kReg === cReg || cReg.indexOf(kReg) !== -1 || kReg.indexOf(cReg) !== -1;
         });
         if (match && match.cro) return match.cro;
       }
+
+      // 3. Keyword / Prefix heuristic matching (handling both formal and acronym forms)
+      var lower = clean.toLowerCase();
+      if (lower.indexOf('kalbar') !== -1 || lower.indexOf('kalimantan barat') !== -1) return 'CRO VI';
+      if (lower.indexOf('kalsel') !== -1 || lower.indexOf('kalimantan selatan') !== -1) return 'CRO VII';
+      if (lower.indexOf('kaltara') !== -1 || lower.indexOf('kalimantan utara') !== -1) return 'CRO VII';
+      if (lower.indexOf('kaltim') !== -1 || lower.indexOf('kalimantan timur') !== -1) return 'CRO VII';
+      if (lower.indexOf('kalteng 2') !== -1 || lower.indexOf('kalimantan tengah 2') !== -1) return 'CRO IX';
+      if (lower.indexOf('kalteng') !== -1 || lower.indexOf('kalimantan tengah') !== -1) return 'CRO VIII';
+      if (lower.indexOf('sulteng') !== -1 || lower.indexOf('sulawesi tengah') !== -1) return 'CRO X';
+      if (lower.indexOf('sultra') !== -1 || lower.indexOf('sulawesi tenggara') !== -1) return 'CRO X';
+      if (lower.indexOf('riau 1') !== -1) return 'CRO II';
+      if (lower.indexOf('riau 2') !== -1 || lower.indexOf('riau 3') !== -1) return 'CRO III';
+      if (lower.indexOf('riau 4') !== -1) return 'CRO IV';
+      if (lower.indexOf('sumbar') !== -1 || lower.indexOf('sumatera barat') !== -1 ||
+          lower.indexOf('sumsel') !== -1 || lower.indexOf('sumatera selatan') !== -1 ||
+          lower.indexOf('jambi') !== -1 || lower.indexOf('babel') !== -1 ||
+          lower.indexOf('bangka') !== -1) return 'CRO V';
+      if (lower.indexOf('aceh') !== -1 || lower.indexOf('sumut') !== -1 ||
+          lower.indexOf('sumatera utara') !== -1 || lower.indexOf('torganda') !== -1) return 'CRO I';
+      if (lower.indexOf('papua') !== -1) return 'CRO XI';
+
+      // 4. Fallback to active dataset's first kebun CRO if present
+      if (listToCheck.length > 0 && listToCheck[0] && listToCheck[0].cro) {
+        return listToCheck[0].cro;
+      }
+
       return 'CRO I';
     }
 
