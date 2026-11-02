@@ -1950,7 +1950,7 @@
 
       var tbody = document.getElementById("tkPanenTableBody");
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="14" class="py-12 text-center text-slate-500 font-semibold animate-pulse">Memuat data kebun untuk Region ' + regParam + '...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="24" class="py-12 text-center text-slate-500 font-semibold animate-pulse">Memuat data kebun untuk Region ' + regParam + '...</td></tr>';
       }
 
       globalTKData = [];
@@ -1965,13 +1965,13 @@
             currentSummaryData = json.summary;
             filterTKPanenTable(preservePage);
           } else {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="14" class="py-12 text-center text-red-500 font-semibold">Gagal memuat data: ' + json.message + '</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="24" class="py-12 text-center text-red-500 font-semibold">Gagal memuat data: ' + json.message + '</td></tr>';
             if (summaryEl) summaryEl.innerHTML = '';
           }
         })
         .catch(function (err) {
           console.error(err);
-          if (tbody) tbody.innerHTML = '<tr><td colspan="14" class="py-12 text-center text-red-500 font-semibold">Terjadi kesalahan koneksi.</td></tr>';
+          if (tbody) tbody.innerHTML = '<tr><td colspan="24" class="py-12 text-center text-red-500 font-semibold">Terjadi kesalahan koneksi.</td></tr>';
           if (summaryEl) summaryEl.innerHTML = '';
         });
     }
@@ -1999,11 +1999,11 @@
       simpanTKPanenEdits();
     }
 
-    var currentTableMonth = 'tk_september';
+    var currentTableMonth = 'tk_oktober';
     var currentSummaryData = null;
 
     function onTKTableMonthChange(selectedMonth) {
-      currentTableMonth = selectedMonth || 'tk_september';
+      currentTableMonth = selectedMonth || 'tk_oktober';
       renderTKPanenTable(globalTKData, currentSummaryData);
     }
 
@@ -2048,7 +2048,7 @@
       if (!tbody) return;
 
       if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="18" class="py-12 text-center text-slate-500 font-medium">Tidak ada data kebun.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="24" class="py-12 text-center text-slate-500 font-medium">Tidak ada data kebun.</td></tr>';
         if (pagEl) pagEl.style.display = "none";
         return;
       }
@@ -2072,9 +2072,11 @@
         var targetAgs = edit.target_agustus !== undefined ? edit.target_agustus : (item.target_agustus || 0);
         var targetSept = edit.target_september !== undefined ? edit.target_september : (item.target_september || 0);
         var targetOkt = edit.target_oktober !== undefined ? edit.target_oktober : (item.target_oktober || 0);
+        var targetNov = edit.target_november !== undefined ? edit.target_november : (item.target_november || 0);
         var valJuli = edit.tk_juli !== undefined ? edit.tk_juli : (item.tk_juli || 0);
         var valAgs = edit.tk_agustus !== undefined ? edit.tk_agustus : (item.tk_agustus || 0);
         var valSept = edit.tk_september !== undefined ? edit.tk_september : (item.tk_september || 0);
+        var valOkt = edit.tk_oktober !== undefined ? edit.tk_oktober : (item.tk_oktober || 0);
 
         var reqTk = parseInt(item.req_tk, 10) || 0;
 
@@ -2121,6 +2123,11 @@
         // Trend September (September - Agustus)
         html += '<td class="py-3 px-2 text-center whitespace-nowrap border-r border-black bg-slate-100/40 dark:bg-[#1E1E1E]/40">' + formatTrendBadge(valSept, valAgs) + '</td>';
 
+        // Realisasi Oktober
+        html += '<td class="py-3 px-2 text-center font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap border-r border-black">' + valOkt.toLocaleString('id-ID') + '</td>';
+        // Trend Oktober (Oktober - September)
+        html += '<td class="py-3 px-2 text-center whitespace-nowrap border-r border-black bg-slate-100/40 dark:bg-[#1E1E1E]/40">' + formatTrendBadge(valOkt, valSept) + '</td>';
+
         // Rencana Pemenuhan Juli
         html += '<td class="py-3 px-2 text-center font-black text-slate-900 dark:text-white whitespace-nowrap border-r border-black">' + targetJuli.toLocaleString('id-ID') + '</td>';
 
@@ -2132,6 +2139,9 @@
 
         // Rencana Pemenuhan Oktober
         html += '<td class="py-3 px-2 text-center font-black text-slate-900 dark:text-white whitespace-nowrap border-r border-black">' + targetOkt.toLocaleString('id-ID') + '</td>';
+
+        // Rencana Pemenuhan November
+        html += '<td class="py-3 px-2 text-center font-black text-slate-900 dark:text-white whitespace-nowrap border-r border-black">' + targetNov.toLocaleString('id-ID') + '</td>';
 
         // Action Cell: Edit & Delete Buttons (Frozen on the Right side)
         html += '<td class="py-3 px-2 text-center whitespace-nowrap sticky right-0 z-10 w-[110px] min-w-[110px] border-l-2 border-black shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.12)] ' + stickyCellBg + '">';
@@ -2177,8 +2187,8 @@
       // KPI Badges
       var summaryEl = document.getElementById("tkSummaryBadges");
       if (summaryEl) {
-        var cutOffField = summary && summary.cutOffField ? summary.cutOffField : 'tk_september';
-        var cutOffMonth = summary && summary.cutOffMonth ? summary.cutOffMonth : 'September';
+        var cutOffField = summary && summary.cutOffField ? summary.cutOffField : 'tk_oktober';
+        var cutOffMonth = summary && summary.cutOffMonth ? summary.cutOffMonth : 'Oktober';
 
         var totalLuas = (globalTKData || []).reduce(function (s, x) { return s + (parseFloat(x.luasan) || 0); }, 0);
         var reqTk = (globalTKData || []).reduce(function (s, x) { return s + (parseInt(x.req_tk) || 0); }, 0);
@@ -2417,10 +2427,12 @@
         tk_juli: parseInt(document.getElementById("addTKJuliVal").value, 10) || 0,
         tk_agustus: parseInt(document.getElementById("addTKAgustusVal").value, 10) || 0,
         tk_september: document.getElementById("addTKSeptVal") ? parseInt(document.getElementById("addTKSeptVal").value, 10) || 0 : 0,
+        tk_oktober: document.getElementById("addTKOktoberVal") ? parseInt(document.getElementById("addTKOktoberVal").value, 10) || 0 : 0,
         target_juli: parseInt(document.getElementById("addTargetJuliVal").value, 10) || 0,
         target_agustus: parseInt(document.getElementById("addTargetAgsVal").value, 10) || 0,
         target_september: parseInt(document.getElementById("addTargetSeptVal").value, 10) || 0,
-        target_oktober: document.getElementById("addTargetOktoberVal") ? parseInt(document.getElementById("addTargetOktoberVal").value, 10) || 0 : 0
+        target_oktober: document.getElementById("addTargetOktoberVal") ? parseInt(document.getElementById("addTargetOktoberVal").value, 10) || 0 : 0,
+        target_november: document.getElementById("addTargetNovemberVal") ? parseInt(document.getElementById("addTargetNovemberVal").value, 10) || 0 : 0
       };
 
       if (!payload.nama_kebun) {
@@ -2478,19 +2490,23 @@
       var valJuli = editObj.tk_juli !== undefined ? editObj.tk_juli : (item.tk_juli || 0);
       var valAgsTK = editObj.tk_agustus !== undefined ? editObj.tk_agustus : (item.tk_agustus || 0);
       var valSeptTK = editObj.tk_september !== undefined ? editObj.tk_september : (item.tk_september || 0);
+      var valOktTK = editObj.tk_oktober !== undefined ? editObj.tk_oktober : (item.tk_oktober || 0);
       var targetJuli = editObj.target_juli !== undefined ? editObj.target_juli : (item.target_juli || 0);
       var targetAgs = editObj.target_agustus !== undefined ? editObj.target_agustus : (item.target_agustus || 0);
       var targetSept = editObj.target_september !== undefined ? editObj.target_september : (item.target_september || 0);
       var targetOkt = editObj.target_oktober !== undefined ? editObj.target_oktober : (item.target_oktober || 0);
+      var targetNov = editObj.target_november !== undefined ? editObj.target_november : (item.target_november || 0);
 
       document.getElementById("editTKJuniVal").value = valJuni;
       if (document.getElementById("editTKJuliVal")) document.getElementById("editTKJuliVal").value = valJuli;
       if (document.getElementById("editTKAgustusVal")) document.getElementById("editTKAgustusVal").value = valAgsTK;
       if (document.getElementById("editTKSeptVal")) document.getElementById("editTKSeptVal").value = valSeptTK;
+      if (document.getElementById("editTKOktoberVal")) document.getElementById("editTKOktoberVal").value = valOktTK;
       document.getElementById("editTargetJuliVal").value = targetJuli;
       document.getElementById("editTargetAgsVal").value = targetAgs;
       if (document.getElementById("editTargetSeptVal")) document.getElementById("editTargetSeptVal").value = targetSept;
       if (document.getElementById("editTargetOktoberVal")) document.getElementById("editTargetOktoberVal").value = targetOkt;
+      if (document.getElementById("editTargetNovemberVal")) document.getElementById("editTargetNovemberVal").value = targetNov;
 
       var sheet = document.getElementById("editKebunSheet");
       var backdrop = document.getElementById("editKebunBackdrop");
@@ -2533,10 +2549,12 @@
       var vJuli = document.getElementById("editTKJuliVal") ? Math.max(0, parseFloat(document.getElementById("editTKJuliVal").value) || 0) : 0;
       var vAgustus = document.getElementById("editTKAgustusVal") ? Math.max(0, parseFloat(document.getElementById("editTKAgustusVal").value) || 0) : 0;
       var vSeptember = document.getElementById("editTKSeptVal") ? Math.max(0, parseFloat(document.getElementById("editTKSeptVal").value) || 0) : 0;
+      var vOktober = document.getElementById("editTKOktoberVal") ? Math.max(0, parseFloat(document.getElementById("editTKOktoberVal").value) || 0) : 0;
       var vTarJuli = Math.max(0, parseFloat(document.getElementById("editTargetJuliVal").value) || 0);
       var vTarAgs = Math.max(0, parseFloat(document.getElementById("editTargetAgsVal").value) || 0);
       var vTarSept = document.getElementById("editTargetSeptVal") ? Math.max(0, parseFloat(document.getElementById("editTargetSeptVal").value) || 0) : 0;
       var vTarOkt = document.getElementById("editTargetOktoberVal") ? Math.max(0, parseFloat(document.getElementById("editTargetOktoberVal").value) || 0) : 0;
+      var vTarNov = document.getElementById("editTargetNovemberVal") ? Math.max(0, parseFloat(document.getElementById("editTargetNovemberVal").value) || 0) : 0;
 
       if (!globalTKEdits[id]) globalTKEdits[id] = {};
       globalTKEdits[id].req_tk = vReqTK;
@@ -2545,10 +2563,12 @@
       globalTKEdits[id].tk_juli = vJuli;
       globalTKEdits[id].tk_agustus = vAgustus;
       globalTKEdits[id].tk_september = vSeptember;
+      globalTKEdits[id].tk_oktober = vOktober;
       globalTKEdits[id].target_juli = vTarJuli;
       globalTKEdits[id].target_agustus = vTarAgs;
       globalTKEdits[id].target_september = vTarSept;
       globalTKEdits[id].target_oktober = vTarOkt;
+      globalTKEdits[id].target_november = vTarNov;
 
       // Update memory state so table re-renders instantly
       activeEditingKebunData.req_tk = vReqTK;
@@ -2557,10 +2577,12 @@
       activeEditingKebunData.tk_juli = vJuli;
       activeEditingKebunData.tk_agustus = vAgustus;
       activeEditingKebunData.tk_september = vSeptember;
+      activeEditingKebunData.tk_oktober = vOktober;
       activeEditingKebunData.target_juli = vTarJuli;
       activeEditingKebunData.target_agustus = vTarAgs;
       activeEditingKebunData.target_september = vTarSept;
       activeEditingKebunData.target_oktober = vTarOkt;
+      activeEditingKebunData.target_november = vTarNov;
 
       var item = (globalTKData || []).find(function (k) { return k.id === id; });
       if (item) {
@@ -2570,10 +2592,12 @@
         item.tk_juli = vJuli;
         item.tk_agustus = vAgustus;
         item.tk_september = vSeptember;
+        item.tk_oktober = vOktober;
         item.target_juli = vTarJuli;
         item.target_agustus = vTarAgs;
         item.target_september = vTarSept;
         item.target_oktober = vTarOkt;
+        item.target_november = vTarNov;
       }
 
       closeEditKebunModal();
@@ -3378,11 +3402,11 @@
                         class="py-3.5 px-2 text-center font-black whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">
                         Kebutuhan<br>Tenaga Panen</th>
                       <!-- Grouped: Ketersedian TK PANEN -->
-                      <th colspan="9"
+                      <th colspan="11"
                         class="py-2.5 px-2 text-center font-black whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black">
                         Ketersedian TK PANEN</th>
                       <!-- Grouped: Rencana Pemenuhan TK Panen -->
-                      <th colspan="4"
+                      <th colspan="5"
                         class="py-2.5 px-2 text-center font-black whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black">
                         Rencana Pemenuhan TK Panen</th>
                       <th rowspan="2"
@@ -3420,6 +3444,12 @@
                         TREND</th>
                       <th
                         class="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">
+                        OKTOBER</th>
+                      <th
+                        class="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black text-emerald-300 font-extrabold">
+                        TREND</th>
+                      <th
+                        class="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">
                         JULI</th>
                       <th
                         class="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">
@@ -3430,11 +3460,14 @@
                       <th
                         class="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">
                         OKTOBER</th>
+                      <th
+                        class="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">
+                        NOVEMBER</th>
                     </tr>
                   </thead>
                   <tbody id="tkPanenTableBody" class="divide-y divide-slate-200 dark:divide-slate-800">
                     <tr>
-                      <td colspan="18" class="py-12 text-center text-slate-500 font-semibold">Memuat data kebun...</td>
+                      <td colspan="24" class="py-12 text-center text-slate-500 font-semibold">Memuat data kebun...</td>
                     </tr>
                   </tbody>
                 </table>
@@ -7229,6 +7262,15 @@
               placeholder="Masukkan ketersediaan September..." />
           </div>
 
+          <!-- Ketersediaan TK Panen Oktober -->
+          <div>
+            <label class="block text-[11px] font-extrabold text-blue-900 dark:text-blue-300 mb-1">Ketersediaan TK Panen
+              Oktober</label>
+            <input type="number" min="0" id="editTKOktoberVal"
+              class="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-blue-300 dark:border-blue-700 rounded-xl text-xs font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 shadow-xs"
+              placeholder="Masukkan ketersediaan Oktober..." />
+          </div>
+
           <!-- Rencana Pemenuhan TK Panen Juli -->
           <div>
             <label class="block text-[11px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-1">Rencana
@@ -7263,6 +7305,15 @@
             <input type="number" min="0" id="editTargetOktoberVal"
               class="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
               placeholder="Masukkan rencana Oktober..." />
+          </div>
+
+          <!-- Rencana Pemenuhan TK Panen November -->
+          <div>
+            <label class="block text-[11px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-1">Rencana
+              Pemenuhan TK Panen November</label>
+            <input type="number" min="0" id="editTargetNovemberVal"
+              class="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
+              placeholder="Masukkan rencana November..." />
           </div>
         </div>
       </form>
@@ -7351,7 +7402,7 @@
               Awal</span>
           </div>
 
-          <div class="grid grid-cols-4 gap-2">
+          <div class="grid grid-cols-5 gap-2">
             <div>
               <label class="block text-[10px] font-extrabold text-blue-900 dark:text-blue-300 mb-0.5">TK Jun</label>
               <input type="number" min="0" id="addTKJuniVal" value="0"
@@ -7372,9 +7423,14 @@
               <input type="number" min="0" id="addTKSeptVal" value="0"
                 class="w-full px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-black" />
             </div>
+            <div>
+              <label class="block text-[10px] font-extrabold text-blue-900 dark:text-blue-300 mb-0.5">TK Okt</label>
+              <input type="number" min="0" id="addTKOktoberVal" value="0"
+                class="w-full px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-black" />
+            </div>
           </div>
 
-          <div class="grid grid-cols-4 gap-2">
+          <div class="grid grid-cols-5 gap-2">
             <div>
               <label class="block text-[10px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-0.5">Rencana
                 Jul</label>
@@ -7397,6 +7453,12 @@
               <label class="block text-[10px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-0.5">Rencana
                 Okt</label>
               <input type="number" min="0" id="addTargetOktoberVal" value="0"
+                class="w-full px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-black" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-0.5">Rencana
+                Nov</label>
+              <input type="number" min="0" id="addTargetNovemberVal" value="0"
                 class="w-full px-2 py-1.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-black" />
             </div>
           </div>

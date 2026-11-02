@@ -4123,7 +4123,7 @@
           regionStats[reg] = { req: 0, avail: 0 };
         }
         regionStats[reg].req += parseFloat(k.req_tk) || 0;
-        const cutOffField = summary?.cutOffField || 'tk_september';
+        const cutOffField = summary?.cutOffField || 'tk_oktober';
         regionStats[reg].avail += parseFloat(k[cutOffField]) || 0;
       });
 
@@ -4134,7 +4134,7 @@
         return { name: reg, req, avail, deficit };
       });
 
-      const cutOffMonth = summary?.cutOffMonth || 'September';
+      const cutOffMonth = summary?.cutOffMonth || 'Oktober';
       const totalReqTk = summary?.totalReqTk || 0;
       const kekurangTK = summary?.kekurangTK || 0;
 
@@ -4185,8 +4185,8 @@
 
       let sumLuasan = 0;
       let sumKebutuhan = 0;
-      let sumMei = 0, sumJuni = 0, sumJuli = 0, sumAgs = 0, sumSept = 0;
-      let sumRencanaJuli = 0, sumRencanaAgs = 0;
+      let sumMei = 0, sumJuni = 0, sumJuli = 0, sumAgs = 0, sumSept = 0, sumOkt = 0;
+      let sumRencanaJuli = 0, sumRencanaAgs = 0, sumRencanaSept = 0, sumRencanaOkt = 0, sumRencanaNov = 0;
 
       // Grouping data
       const grouped = {};
@@ -4210,10 +4210,12 @@
             tk_juli: 0,
             tk_agustus: 0,
             tk_september: 0,
+            tk_oktober: 0,
             target_juli: 0,
             target_agustus: 0,
             target_september: 0,
-            target_oktober: 0
+            target_oktober: 0,
+            target_november: 0
           };
         }
         grouped[key].luasan += parseFloat(item.luasan) || 0;
@@ -4223,10 +4225,12 @@
         grouped[key].tk_juli += parseInt(item.tk_juli, 10) || 0;
         grouped[key].tk_agustus += parseInt(item.tk_agustus, 10) || 0;
         grouped[key].tk_september += parseInt(item.tk_september, 10) || 0;
+        grouped[key].tk_oktober += parseInt(item.tk_oktober, 10) || 0;
         grouped[key].target_juli += parseInt(item.target_juli, 10) || 0;
         grouped[key].target_agustus += parseInt(item.target_agustus, 10) || 0;
         grouped[key].target_september += parseInt(item.target_september, 10) || 0;
         grouped[key].target_oktober += parseInt(item.target_oktober, 10) || 0;
+        grouped[key].target_november += parseInt(item.target_november, 10) || 0;
       });
 
       const romanToInt = (str) => {
@@ -4419,8 +4423,8 @@
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-xs font-bold bg-[#46bdc6]" rowSpan="2">Wilayah</th>
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-xs font-bold bg-[#46bdc6]" rowSpan="2">LUASAN</th>
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-xs font-bold bg-[#46bdc6]" rowSpan="2">Kebutuhan Tenaga Panen</th>
-                    <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-xs font-bold bg-[#46bdc6]" colSpan="9">Ketersedian TK PANEN</th>
-                    <th className="border-b border-r-2 border-black dark:border-slate-700 px-3 py-2 text-center text-xs font-bold bg-[#46bdc6]" colSpan="4">RENCANA PEMENUHAN TK PANEN</th>
+                    <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-xs font-bold bg-[#46bdc6]" colSpan="11">Ketersedian TK PANEN</th>
+                    <th className="border-b border-r-2 border-black dark:border-slate-700 px-3 py-2 text-center text-xs font-bold bg-[#46bdc6]" colSpan="5">RENCANA PEMENUHAN TK PANEN</th>
                   </tr>
                   <tr>
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">MEI</th>
@@ -4432,10 +4436,13 @@
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6] text-emerald-100">TREND</th>
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">SEPTEMBER</th>
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6] text-emerald-100">TREND</th>
+                    <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">OKTOBER</th>
+                    <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6] text-emerald-100">TREND</th>
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">JULI</th>
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">AGUSTUS</th>
                     <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">SEPTEMBER</th>
-                    <th className="border-b border-r-2 border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">OKTOBER</th>
+                    <th className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">OKTOBER</th>
+                    <th className="border-b border-r-2 border-black dark:border-slate-700 px-3 py-2 text-center text-[10px] font-bold bg-[#46bdc6]">NOVEMBER</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -4445,10 +4452,12 @@
                     const valJuli = item.tk_juli;
                     const valAgs = item.tk_agustus;
                     const valSept = item.tk_september || 0;
+                    const valOkt = item.tk_oktober || 0;
                     const targetJuli = item.target_juli;
                     const targetAgs = item.target_agustus;
                     const targetSept = item.target_september || 0;
                     const targetOkt = item.target_oktober || 0;
+                    const targetNov = item.target_november || 0;
                     const reqTk = item.req_tk;
                     const luasan = item.luasan;
 
@@ -4459,12 +4468,12 @@
                     sumJuli += valJuli;
                     sumAgs += valAgs;
                     sumSept += valSept;
+                    sumOkt += valOkt;
                     sumRencanaJuli += targetJuli;
                     sumRencanaAgs += targetAgs;
-                    if (typeof sumRencanaSept === 'undefined') window.sumRencanaSept = 0;
-                    window.sumRencanaSept += targetSept;
-                    if (typeof sumRencanaOkt === 'undefined') window.sumRencanaOkt = 0;
-                    window.sumRencanaOkt += targetOkt;
+                    sumRencanaSept += targetSept;
+                    sumRencanaOkt += targetOkt;
+                    sumRencanaNov += targetNov;
 
                     const romanCro = formatCroToRoman(item.cro);
                     let isNewCro = false;
@@ -4498,10 +4507,13 @@
                         <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center bg-slate-50/50 dark:bg-[#1E1E1E]/50">{formatTrendBadge(valAgs, valJuli)}</td>
                         <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-black dark:text-white font-medium">{valSept.toLocaleString('id-ID')}</td>
                         <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center bg-slate-50/50 dark:bg-[#1E1E1E]/50">{formatTrendBadge(valSept, valAgs)}</td>
+                        <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-black dark:text-white font-medium">{valOkt.toLocaleString('id-ID')}</td>
+                        <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center bg-slate-50/50 dark:bg-[#1E1E1E]/50">{formatTrendBadge(valOkt, valSept)}</td>
                         <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center text-purple-600 dark:text-purple-400 font-bold">{targetJuli.toLocaleString('id-ID')}</td>
                         <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center font-bold">{targetAgs.toLocaleString('id-ID')}</td>
                         <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center font-bold">{targetSept.toLocaleString('id-ID')}</td>
-                        <td className="border-b border-r-2 border-black dark:border-slate-700 px-3 py-2 text-center font-bold">{targetOkt.toLocaleString('id-ID')}</td>
+                        <td className="border-b border-r border-black dark:border-slate-700 px-3 py-2 text-center font-bold">{targetOkt.toLocaleString('id-ID')}</td>
+                        <td className="border-b border-r-2 border-black dark:border-slate-700 px-3 py-2 text-center font-bold">{targetNov.toLocaleString('id-ID')}</td>
                       </tr>
                     );
                   })}
@@ -4518,10 +4530,13 @@
                     <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center bg-slate-50/50 dark:bg-[#1E1E1E]/50">{formatTrendBadge(sumAgs, sumJuli)}</td>
                     <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center text-black dark:text-white font-medium">{sumSept.toLocaleString('id-ID')}</td>
                     <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center bg-slate-50/50 dark:bg-[#1E1E1E]/50">{formatTrendBadge(sumSept, sumAgs)}</td>
+                    <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center text-black dark:text-white font-medium">{sumOkt.toLocaleString('id-ID')}</td>
+                    <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center bg-slate-50/50 dark:bg-[#1E1E1E]/50">{formatTrendBadge(sumOkt, sumSept)}</td>
                     <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center text-purple-600 dark:text-purple-400">{sumRencanaJuli.toLocaleString('id-ID')}</td>
                     <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center">{sumRencanaAgs.toLocaleString('id-ID')}</td>
-                    <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center">{(window.sumRencanaSept || 0).toLocaleString('id-ID')}</td>
-                    <td className="border-b-2 border-r-2 border-black dark:border-slate-700 px-3 py-2 text-center">{(window.sumRencanaOkt || 0).toLocaleString('id-ID')}</td>
+                    <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center">{sumRencanaSept.toLocaleString('id-ID')}</td>
+                    <td className="border-b-2 border-r border-black dark:border-slate-700 px-3 py-2 text-center">{sumRencanaOkt.toLocaleString('id-ID')}</td>
+                    <td className="border-b-2 border-r-2 border-black dark:border-slate-700 px-3 py-2 text-center">{sumRencanaNov.toLocaleString('id-ID')}</td>
                   </tr>
                 </tbody>
               </table>
@@ -4622,14 +4637,7 @@
             if (edited) {
               return {
                 ...item,
-                req_tk: edited.req_tk,
-                luasan: edited.luasan,
-                tk_juni: edited.tk_juni,
-                tk_juli: edited.tk_juli,
-                tk_agustus: edited.tk_agustus,
-                target_juli: edited.target_juli,
-                target_agustus: edited.target_agustus,
-                target_september: edited.target_september
+                ...edited
               };
             }
             return item;
@@ -4716,8 +4724,8 @@
       const endIdx = startIdx + pageSize;
       const paginatedKebun = filteredKebun.slice(startIdx, endIdx);
 
-      const cutOffField = summary.cutOffField || 'tk_september';
-      const cutOffMonth = summary.cutOffMonth || 'September';
+      const cutOffField = summary.cutOffField || 'tk_oktober';
+      const cutOffMonth = summary.cutOffMonth || 'Oktober';
 
       const totalLuas = kebunData.reduce((s, x) => s + (parseFloat(x.luasan) || 0), 0);
       const totalReqTk = kebunData.reduce((s, x) => s + (parseInt(x.req_tk) || 0), 0);
@@ -4737,10 +4745,12 @@
         let totJuli = 0;
         let totAgs = 0;
         let totSept = 0;
+        let totOkt = 0;
         let totTargetJuli = 0;
         let totTargetAgs = 0;
         let totTargetSept = 0;
         let totTargetOkt = 0;
+        let totTargetNov = 0;
 
         const startRow = 3;
         const endRow = 2 + filteredKebun.length;
@@ -4753,9 +4763,11 @@
           const targetAgs = editObj.target_agustus !== undefined ? parseInt(editObj.target_agustus, 10) : (parseInt(item.target_agustus, 10) || 0);
           const targetSept = editObj.target_september !== undefined ? parseInt(editObj.target_september, 10) : (parseInt(item.target_september, 10) || 0);
           const targetOkt = editObj.target_oktober !== undefined ? parseInt(editObj.target_oktober, 10) : (parseInt(item.target_oktober, 10) || 0);
+          const targetNov = editObj.target_november !== undefined ? parseInt(editObj.target_november, 10) : (parseInt(item.target_november, 10) || 0);
           const valJuli = editObj.tk_juli !== undefined ? parseInt(editObj.tk_juli, 10) : (parseInt(item.tk_juli, 10) || 0);
           const valAgs = editObj.tk_agustus !== undefined ? parseInt(editObj.tk_agustus, 10) : (parseInt(item.tk_agustus, 10) || 0);
           const valSept = editObj.tk_september !== undefined ? parseInt(editObj.tk_september, 10) : (parseInt(item.tk_september, 10) || 0);
+          const valOkt = editObj.tk_oktober !== undefined ? parseInt(editObj.tk_oktober, 10) : (parseInt(item.tk_oktober, 10) || 0);
           const reqTk = parseInt(item.req_tk, 10) || 0;
           const luasan = parseFloat(item.luasan) || 0;
 
@@ -4776,6 +4788,10 @@
           const trendSeptText = diffSept > 0 ? `▲ +${diffSept.toLocaleString('id-ID')}` : diffSept < 0 ? `▼ ${diffSept.toLocaleString('id-ID')}` : `▲ 0`;
           const trendSeptColor = diffSept >= 0 ? `#059669` : `#dc2626`;
 
+          const diffOkt = valOkt - valSept;
+          const trendOktText = diffOkt > 0 ? `▲ +${diffOkt.toLocaleString('id-ID')}` : diffOkt < 0 ? `▼ ${diffOkt.toLocaleString('id-ID')}` : `▲ 0`;
+          const trendOktColor = diffOkt >= 0 ? `#059669` : `#dc2626`;
+
           const rowBg = '#ffffff';
 
           totLuas += luasan;
@@ -4785,10 +4801,12 @@
           totJuli += valJuli;
           totAgs += valAgs;
           totSept += valSept;
+          totOkt += valOkt;
           totTargetJuli += targetJuli;
           totTargetAgs += targetAgs;
           totTargetSept += targetSept;
           totTargetOkt += targetOkt;
+          totTargetNov += targetNov;
 
           return `
             <tr style="background-color: ${rowBg}; font-family: Arial, sans-serif; font-size: 10pt;">
@@ -4808,10 +4826,13 @@
               <td style="border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold; color: ${trendAgsColor};">${trendAgsText}</td>
               <td x:num="${valSept}" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt;" width="100">${valSept.toLocaleString('id-ID')}</td>
               <td style="border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold; color: ${trendSeptColor};">${trendSeptText}</td>
+              <td x:num="${valOkt}" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt;" width="100">${valOkt.toLocaleString('id-ID')}</td>
+              <td style="border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold; color: ${trendOktColor};">${trendOktText}</td>
               <td x:num="${targetJuli}" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold;" width="100">${targetJuli.toLocaleString('id-ID')}</td>
               <td x:num="${targetAgs}" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold;" width="100">${targetAgs.toLocaleString('id-ID')}</td>
               <td x:num="${targetSept}" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold;" width="100">${targetSept.toLocaleString('id-ID')}</td>
               <td x:num="${targetOkt}" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold;" width="100">${targetOkt.toLocaleString('id-ID')}</td>
+              <td x:num="${targetNov}" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 10pt; font-weight: bold;" width="100">${targetNov.toLocaleString('id-ID')}</td>
             </tr>
           `;
         }).join('');
@@ -4832,6 +4853,10 @@
         const trendTotSeptText = diffTotSept > 0 ? `▲ +${diffTotSept.toLocaleString('id-ID')}` : diffTotSept < 0 ? `▼ ${diffTotSept.toLocaleString('id-ID')}` : `▲ 0`;
         const trendTotSeptColor = diffTotSept >= 0 ? `#6ee7b7` : `#fca5a5`;
 
+        const diffTotOkt = totOkt - totSept;
+        const trendTotOktText = diffTotOkt > 0 ? `▲ +${diffTotOkt.toLocaleString('id-ID')}` : diffTotOkt < 0 ? `▼ ${diffTotOkt.toLocaleString('id-ID')}` : `▲ 0`;
+        const trendTotOktColor = diffTotOkt >= 0 ? `#6ee7b7` : `#fca5a5`;
+
         const totalRowHtml = `
           <tr style="font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;">
             <td colspan="5" style="background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;">TOTAL</td>
@@ -4847,9 +4872,12 @@
             <td x:fmla="=SUM(O${startRow}:O${endRow})" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;" width="100">=SUM(O${startRow}:O${endRow})</td>
             <td style="background-color: #162d4a; color: ${trendTotSeptColor}; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;">${trendTotSeptText}</td>
             <td x:fmla="=SUM(Q${startRow}:Q${endRow})" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;" width="100">=SUM(Q${startRow}:Q${endRow})</td>
-            <td x:fmla="=SUM(R${startRow}:R${endRow})" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;" width="100">=SUM(R${startRow}:R${endRow})</td>
+            <td style="background-color: #162d4a; color: ${trendTotOktColor}; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;">${trendTotOktText}</td>
             <td x:fmla="=SUM(S${startRow}:S${endRow})" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;" width="100">=SUM(S${startRow}:S${endRow})</td>
             <td x:fmla="=SUM(T${startRow}:T${endRow})" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;" width="100">=SUM(T${startRow}:T${endRow})</td>
+            <td x:fmla="=SUM(U${startRow}:U${endRow})" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;" width="100">=SUM(U${startRow}:U${endRow})</td>
+            <td x:fmla="=SUM(V${startRow}:V${endRow})" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;" width="100">=SUM(V${startRow}:V${endRow})</td>
+            <td x:fmla="=SUM(W${startRow}:W${endRow})" style="mso-number-format:'#\,##0\.00'; width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; border: 0.5pt solid black; text-align: center; vertical-align: middle; font-family: Arial, sans-serif; font-size: 11pt; font-weight: bold;" width="100">=SUM(W${startRow}:W${endRow})</td>
           </tr>
         `;
 
@@ -4862,8 +4890,8 @@
             <th rowspan="2" style="background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 50px;">Name Tag Kebun</th>
             <th rowspan="2" style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 50px;" width="100">Luasan</th>
             <th rowspan="2" style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 50px;" width="100">Kebutuhan Tenaga Panen</th>
-            <th colspan="9" style="background-color: #162d4a; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;">Ketersedian TK PANEN</th>
-            <th colspan="4" style="background-color: #162d4a; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;">Rencana Pemenuhan TK Panen</th>
+            <th colspan="11" style="background-color: #162d4a; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;">Ketersedian TK PANEN</th>
+            <th colspan="5" style="background-color: #162d4a; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;">Rencana Pemenuhan TK Panen</th>
           </tr>
         `;
 
@@ -4878,10 +4906,13 @@
             <th style="background-color: #162d4a; color: #6ee7b7; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;">TREND</th>
             <th style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;" width="100">SEPTEMBER</th>
             <th style="background-color: #162d4a; color: #6ee7b7; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;">TREND</th>
+            <th style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;" width="100">OKTOBER</th>
+            <th style="background-color: #162d4a; color: #6ee7b7; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;">TREND</th>
             <th style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;" width="100">JULI</th>
             <th style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;" width="100">AGUSTUS</th>
             <th style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;" width="100">SEPTEMBER</th>
             <th style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;" width="100">OKTOBER</th>
+            <th style="width: 100px; min-width: 100px; max-width: 100px; background-color: #1e3a5f; color: #ffffff; font-family: Arial, sans-serif; font-size: 12pt; font-weight: bold; border: 0.5pt solid black; text-align: center; vertical-align: middle; height: 25px;" width="100">NOVEMBER</th>
           </tr>
         `;
 
@@ -4935,6 +4966,9 @@
                   <col />
                   <col style="width: 100px;" width="100" />
                   <col />
+                  <col style="width: 100px;" width="100" />
+                  <col />
+                  <col style="width: 100px;" width="100" />
                   <col style="width: 100px;" width="100" />
                   <col style="width: 100px;" width="100" />
                   <col style="width: 100px;" width="100" />
@@ -5133,9 +5167,9 @@
                     <th rowSpan="2" className="py-3.5 px-2 text-center font-black whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">Luasan</th>
                     <th rowSpan="2" className="py-3.5 px-2 text-center font-black whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">Kebutuhan<br />Tenaga Panen</th>
                     {/* Grouped: Ketersedian TK PANEN */}
-                    <th colSpan="9" className="py-2.5 px-2 text-center font-black whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black">Ketersedian TK PANEN</th>
+                    <th colSpan="11" className="py-2.5 px-2 text-center font-black whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black">Ketersedian TK PANEN</th>
                     {/* Grouped: Rencana Pemenuhan TK Panen */}
-                    <th colSpan="4" className="py-2.5 px-2 text-center font-black whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black">Rencana Pemenuhan TK Panen</th>
+                    <th colSpan="5" className="py-2.5 px-2 text-center font-black whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black">Rencana Pemenuhan TK Panen</th>
                     <th rowSpan="2" className="py-3.5 px-2 text-center w-[110px] min-w-[110px] font-black whitespace-nowrap sticky right-0 z-40 bg-[#1e3a5f] dark:bg-[#15304f] border-l-2 border-b border-black shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.3)]">AKSI</th>
                   </tr>
                   {/* Row 2: Sub-column headers under grouped columns */}
@@ -5149,22 +5183,25 @@
                     <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black text-emerald-300 font-extrabold">TREND</th>
                     <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">SEPTEMBER</th>
                     <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black text-emerald-300 font-extrabold">TREND</th>
+                    <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">OKTOBER</th>
+                    <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#162d4a] dark:bg-[#0f2440] border-r border-b border-black text-emerald-300 font-extrabold">TREND</th>
                     <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">JULI</th>
                     <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">AGUSTUS</th>
                     <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">SEPTEMBER</th>
                     <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">OKTOBER</th>
+                    <th className="py-2.5 px-2 text-center font-bold whitespace-nowrap bg-[#1e3a5f] dark:bg-[#15304f] border-r border-b border-black">NOVEMBER</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {loading ? (
                     <tr>
-                      <td colSpan="21" className="py-12 text-center text-slate-500 font-semibold animate-pulse">
+                      <td colSpan="24" className="py-12 text-center text-slate-500 font-semibold animate-pulse">
                         Memuat data kebun...
                       </td>
                     </tr>
                   ) : filteredKebun.length === 0 ? (
                     <tr>
-                      <td colSpan="21" className="py-12 text-center text-slate-500 font-medium">
+                      <td colSpan="24" className="py-12 text-center text-slate-500 font-medium">
                         Tidak ada data kebun yang sesuai.
                       </td>
                     </tr>
@@ -5178,9 +5215,11 @@
                       const targetAgs = editObj.target_agustus !== undefined ? editObj.target_agustus : (item.target_agustus || 0);
                       const targetSept = editObj.target_september !== undefined ? editObj.target_september : (item.target_september || 0);
                       const targetOkt = editObj.target_oktober !== undefined ? editObj.target_oktober : (item.target_oktober || 0);
+                      const targetNov = editObj.target_november !== undefined ? editObj.target_november : (item.target_november || 0);
                       const valJuli = editObj.tk_juli !== undefined ? editObj.tk_juli : (item.tk_juli || 0);
                       const valAgs = editObj.tk_agustus !== undefined ? editObj.tk_agustus : (item.tk_agustus || 0);
                       const valSept = editObj.tk_september !== undefined ? editObj.tk_september : (item.tk_september || 0);
+                      const valOkt = editObj.tk_oktober !== undefined ? editObj.tk_oktober : (item.tk_oktober || 0);
                       const reqTk = parseInt(item.req_tk, 10) || 0;
 
                       const sumThreeCols = valJuni + targetJuli + targetAgs;
@@ -5251,7 +5290,15 @@
                           <td className="py-3 px-2 text-center whitespace-nowrap border-r border-black bg-slate-100/40 dark:bg-[#1E1E1E]/40">
                             {formatTrendBadge(valSept, valAgs)}
                           </td>
-                          {/* Rencana Pemenuhan TK Panen: Juli, Agustus, September & Oktober */}
+                          {/* Realisasi Oktober */}
+                          <td className="py-3 px-2 text-center font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap border-r border-black">
+                            {formatRibuan(valOkt)}
+                          </td>
+                          {/* Trend Oktober */}
+                          <td className="py-3 px-2 text-center whitespace-nowrap border-r border-black bg-slate-100/40 dark:bg-[#1E1E1E]/40">
+                            {formatTrendBadge(valOkt, valSept)}
+                          </td>
+                          {/* Rencana Pemenuhan TK Panen: Juli, Agustus, September, Oktober & November */}
                           <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white whitespace-nowrap border-r border-black">
                             {formatRibuan(targetJuli)}
                           </td>
@@ -5263,6 +5310,9 @@
                           </td>
                           <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white whitespace-nowrap border-r border-black">
                             {formatRibuan(targetOkt)}
+                          </td>
+                          <td className="py-3 px-2 text-center font-black text-slate-900 dark:text-white whitespace-nowrap border-r border-black">
+                            {formatRibuan(targetNov)}
                           </td>
                           <td className={`py-3 px-2 text-center whitespace-nowrap sticky right-0 z-10 w-[110px] min-w-[110px] border-l-2 border-black shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.12)] ${stickyCellBg}`}>
                             <div className="flex items-center justify-center gap-1.5">
@@ -5383,10 +5433,12 @@
                       const vTKJuli = Math.max(0, parseFloat(document.getElementById("editTKJuliVal")?.value) || 0);
                       const vTKAgustus = Math.max(0, parseFloat(document.getElementById("editTKAgustusVal")?.value) || 0);
                       const vTKSept = Math.max(0, parseFloat(document.getElementById("editTKSeptVal")?.value) || 0);
+                      const vTKOkt = Math.max(0, parseFloat(document.getElementById("editTKOktoberVal")?.value) || 0);
                       const vTarJuli = Math.max(0, parseFloat(document.getElementById("editTargetJuliVal")?.value) || 0);
                       const vTarAgs = Math.max(0, parseFloat(document.getElementById("editTargetAgsVal")?.value) || 0);
                       const vTarSept = Math.max(0, parseFloat(document.getElementById("editTargetSeptVal")?.value) || 0);
                       const vTarOkt = Math.max(0, parseFloat(document.getElementById("editTargetOktoberVal")?.value) || 0);
+                      const vTarNov = Math.max(0, parseFloat(document.getElementById("editTargetNovemberVal")?.value) || 0);
 
                       const newEdits = {
                         ...edits,
@@ -5398,10 +5450,12 @@
                           tk_juli: vTKJuli,
                           tk_agustus: vTKAgustus,
                           tk_september: vTKSept,
+                          tk_oktober: vTKOkt,
                           target_juli: vTarJuli,
                           target_agustus: vTarAgs,
                           target_september: vTarSept,
-                          target_oktober: vTarOkt
+                          target_oktober: vTarOkt,
+                          target_november: vTarNov
                         }
                       };
                       setEdits(newEdits);
@@ -5513,6 +5567,20 @@
                       </div>
 
                       <div>
+                        <label className="block text-[11px] font-extrabold text-blue-900 dark:text-blue-300 mb-1">
+                          Ketersediaan TK Panen Oktober
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          id="editTKOktoberVal"
+                          defaultValue={(edits[activeEditKebun.id]?.tk_oktober !== undefined ? edits[activeEditKebun.id].tk_oktober : activeEditKebun.tk_oktober) || 0}
+                          className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-blue-300 dark:border-blue-700 rounded-xl text-xs font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 shadow-xs"
+                          placeholder="Masukkan ketersediaan Oktober..."
+                        />
+                      </div>
+
+                      <div>
                         <label className="block text-[11px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-1">
                           Rencana Pemenuhan TK Panen Juli
                         </label>
@@ -5565,6 +5633,20 @@
                           defaultValue={(edits[activeEditKebun.id]?.target_oktober !== undefined ? edits[activeEditKebun.id].target_oktober : activeEditKebun.target_oktober) || 0}
                           className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
                           placeholder="Masukkan rencana Oktober..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-1">
+                          Rencana Pemenuhan TK Panen November
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          id="editTargetNovemberVal"
+                          defaultValue={(edits[activeEditKebun.id]?.target_november !== undefined ? edits[activeEditKebun.id].target_november : activeEditKebun.target_november) || 0}
+                          className="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-emerald-300 dark:border-emerald-700 rounded-xl text-xs font-black text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                          placeholder="Masukkan rencana November..."
                         />
                       </div>
                     </div>
@@ -5626,11 +5708,13 @@
                         tk_juli: parseInt(document.getElementById("addTKJuliVal")?.value, 10) || 0,
                         tk_agustus: parseInt(document.getElementById("addTKAgustusVal")?.value, 10) || 0,
                         tk_september: parseInt(document.getElementById("addTKSeptVal")?.value, 10) || 0,
+                        tk_oktober: parseInt(document.getElementById("addTKOktoberVal")?.value, 10) || 0,
                         target_juli: parseInt(document.getElementById("addTargetJuliVal")?.value, 10) || 0,
                         target_agustus: parseInt(document.getElementById("addTargetAgsVal")?.value, 10) || 0,
                         target_standard: 0,
                         target_september: parseInt(document.getElementById("addTargetSeptVal")?.value, 10) || 0,
-                        target_oktober: parseInt(document.getElementById("addTargetOktoberVal")?.value, 10) || 0
+                        target_oktober: parseInt(document.getElementById("addTargetOktoberVal")?.value, 10) || 0,
+                        target_november: parseInt(document.getElementById("addTargetNovemberVal")?.value, 10) || 0
                       };
                       if (!payload.nama_kebun || !payload.region) {
                         alert("Nama Kebun dan Region wajib diisi!");
@@ -5719,7 +5803,7 @@
                         <span className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">📊 Data TK Awal</span>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-5 gap-2">
                         <div>
                           <label className="block text-[10px] font-extrabold text-blue-900 dark:text-blue-300 mb-0.5">TK Juni</label>
                           <input
@@ -5760,9 +5844,19 @@
                             className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-black"
                           />
                         </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-blue-900 dark:text-blue-300 mb-0.5">TK Okt</label>
+                          <input
+                            type="number"
+                            min="0"
+                            id="addTKOktoberVal"
+                            defaultValue="0"
+                            className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-black"
+                          />
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-5 gap-2">
                         <div>
                           <label className="block text-[10px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-0.5">Rencana Jul</label>
                           <input
@@ -5799,6 +5893,16 @@
                             type="number"
                             min="0"
                             id="addTargetOktoberVal"
+                            defaultValue="0"
+                            className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-black"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-extrabold text-emerald-900 dark:text-emerald-300 mb-0.5">Rencana Nov</label>
+                          <input
+                            type="number"
+                            min="0"
+                            id="addTargetNovemberVal"
                             defaultValue="0"
                             className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-black"
                           />

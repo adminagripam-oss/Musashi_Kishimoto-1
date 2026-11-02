@@ -6,12 +6,12 @@
 
 ### TK Panen Data Structure & KPI Cut-Off Rule
 **When working on or modifying TK Panen tables, modals, or KPI cards in `laporan_produksi.html` and `login.html`, AI agents MUST:**
-1. **Default KPI Cut-Off Month:** Always use **September** (`tk_september` / `September`) as the default cut-off month for KPI card calculations and summary metrics.
-2. **Ketersediaan TK Panen Sub-Columns (9 Columns):** 
-   - TK Juni, TK Juli, Trend (Jul vs Jun), TK Ags, Trend (Ags vs Jul), **TK Sep**, **Trend (Sep vs Ags)**, SD Ags, SD Sep.
-3. **Rencana Pemenuhan TK Panen Sub-Columns (4 Columns):**
-   - Rencana Jul, Rencana Ags, Rencana Sep, **Rencana Okt**.
-4. **Synchronized Persistence:** Ensure both `addKebun` and `updateTK` handlers in `api/kebunTK.js` and all modal forms (Edit Kebun & Tambah Kebun) read, validate, and save `tk_september` and `target_oktober`.
+1. **Default KPI Cut-Off Month:** Always use **Oktober** (`tk_oktober` / `Oktober`) as the default cut-off month for KPI card calculations and summary metrics.
+2. **Ketersediaan TK Panen Sub-Columns (11 Columns):** 
+   - TK Mei, TK Juni, Trend (Jun vs Mei), TK Juli, Trend (Jul vs Jun), TK Ags, Trend (Ags vs Jul), TK Sep, Trend (Sep vs Ags), **TK Okt**, **Trend (Okt vs Sep)**.
+3. **Rencana Pemenuhan TK Panen Sub-Columns (5 Columns):**
+   - Rencana Jul, Rencana Ags, Rencana Sep, Rencana Okt, **Rencana Nov**.
+4. **Synchronized Persistence:** Ensure both `addKebun` and `updateTK` handlers in `api/kebunTK.js` and all modal forms (Edit Kebun & Tambah Kebun) read, validate, and save `tk_oktober` and `target_november`.
 
 ### Region Naming & Aggregation Harmonization Rule
 **When displaying, grouping, or filtering regional data for TK Panen in `laporan_produksi.html`, `login.html`, and backend APIs:**
@@ -42,7 +42,7 @@
    - **`headerRow1` colspans**: Perbarui `colspan` pada grup Ketersediaan dan Rencana Pemenuhan sesuai jumlah sub-kolom baru.
    - **`headerRow2` sub-column headers**: Tambahkan `<th>` bulan baru dan kolom trend terkait pada posisi indeks yang tepat.
    - **`totalRowHtml` formulas & text**: Sesuaikan penamaan huruf kolom Excel (`=SUM(ColX:ColX)`) agar tetap selaras dengan kolom data numerik dan tidak menimpa kolom trend teks. Tambahkan formula untuk bulan baru.
-   - **`<colgroup>`**: Pastikan jumlah elemen `<col>` sama persis dengan total kolom tabel (20 kolom).
+   - **`<colgroup>`**: Pastikan jumlah elemen `<col>` sama persis dengan total kolom tabel (23 kolom).
 
 5. **Data Persistence & Export Verification:**
    - Enter a test value → restart the local dev server (`node dev-server.js`) → confirm the value still appears.
@@ -58,5 +58,12 @@
 1. **Verify Database Schema First (Backend-First):** Never create UI input fields, table columns, or API endpoints that accept new data attributes without FIRST verifying that the underlying database table (Supabase/PostgreSQL) has the corresponding column.
 2. **No Silent Local JSON Fallback in Production:** Local JSON files (such as `data_kebun_tk.json`) MUST only be treated as read-only fallbacks when offline. New data writes MUST fail loud or alert the developer if the Supabase column is missing, rather than silently saving only to transient local storage.
 3. **Mandatory Migration Check Point:** Every pull request or feature deployment involving data schema changes MUST include a verified SQL migration script (`.sql`) and explicit confirmation that the SQL script has been executed against the production Supabase project before announcing feature completion.
+
+### Multi-Agent Collaboration Rule (Antigravity & Claude Code)
+**When collaborating across AI agents (Antigravity & Claude Code):**
+1. **Single Active Agent per Task:** Only one AI agent should actively write or modify code for a specific feature/task at any given time to avoid file collisions or state race conditions.
+2. **Mandatory Handoff Tracking (`AGENT_HANDOFF.md`):** Always check `AGENT_HANDOFF.md` before starting work. Upon completing a task or milestone, update `AGENT_HANDOFF.md` with current status, modified files, and handoff instructions for the peer agent.
+3. **Synchronized Rules (`CLAUDE.md`):** Any updates or additions to architectural rules in `AGENTS.md` MUST be reflected in `CLAUDE.md` so that both Claude Code and Antigravity operate under identical constraints.
+
 
 
