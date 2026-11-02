@@ -39,6 +39,48 @@ function normalizeRegion(rStr) {
   return s;
 }
 
+const REGION_TO_CRO_MAP = {
+  'Aceh': 'CRO I',
+  'Sumut 1': 'CRO I',
+  'Sumut 2': 'CRO I',
+  'Riau 1': 'CRO II',
+  'Riau 2': 'CRO III',
+  'Riau 3': 'CRO III',
+  'Riau 4': 'CRO IV',
+  'Sumbar': 'CRO V',
+  'Sumatera Barat': 'CRO V',
+  'Jambi': 'CRO V',
+  'Babel': 'CRO V',
+  'Bangka Belitung': 'CRO V',
+  'Sumsel': 'CRO V',
+  'Sumatera Selatan': 'CRO V',
+  'Kalbar 1': 'CRO VI',
+  'Kalbar 2': 'CRO VI',
+  'Kalsel 1': 'CRO VII',
+  'Kalsel 2': 'CRO VII',
+  'Kaltara': 'CRO VII',
+  'Kaltim': 'CRO VII',
+  'Kalteng 1': 'CRO VIII',
+  'Kalteng 3': 'CRO VIII',
+  'Kalteng 2': 'CRO IX',
+  'Sulteng': 'CRO X',
+  'Sultra': 'CRO X',
+  'Papua Selatan': 'CRO XI'
+};
+
+function getCroForRegion(regionName, existingList) {
+  if (!regionName) return 'CRO I';
+  const norm = normalizeRegion(regionName);
+  for (const [rKey, croVal] of Object.entries(REGION_TO_CRO_MAP)) {
+    if (normalizeRegion(rKey) === norm) return croVal;
+  }
+  if (Array.isArray(existingList)) {
+    const match = existingList.find(k => k.region && normalizeRegion(k.region) === norm && k.cro);
+    if (match && match.cro) return match.cro;
+  }
+  return 'CRO I';
+}
+
 function loadKebunData() {
   try {
     if (fs.existsSync(jsonPath)) {
@@ -226,12 +268,16 @@ module.exports = async (req, res) => {
           if (edit.tk_oktober !== undefined && edit.tk_oktober !== null) {
             item.tk_oktober = Math.max(0, parseFloat(edit.tk_oktober) || 0);
           }
+          if (edit.cro !== undefined && edit.cro !== null && String(edit.cro).trim()) {
+            item.cro = String(edit.cro).trim();
+          }
           item.updated_by = regionParam;
           item.updated_at = nowIso;
           updatedCount++;
 
           try {
             const fullPayload = {
+              cro: item.cro,
               req_tk: item.req_tk,
               luasan: item.luasan,
               tk_juni: item.tk_juni,
@@ -251,6 +297,7 @@ module.exports = async (req, res) => {
             if (sbErr) {
               console.error(`[kebunTK] Supabase update fullPayload failed for id=${targetId}:`, sbErr.message, sbErr.details);
               const safePayload = {
+                cro: item.cro,
                 req_tk: item.req_tk,
                 luasan: item.luasan,
                 tk_juni: item.tk_juni,
@@ -371,11 +418,12 @@ module.exports = async (req, res) => {
 
     // Generate new ID
     const maxId = kebunList.reduce((max, k) => k.id > max ? k.id : max, 0);
-    const newId = Math.max(896, maxId + 1); // Starting above our synchronized list if possible, or max+1
+    const newId = maxId + 1;
+    const targetCro = (p.cro && String(p.cro).trim() !== '-' ? String(p.cro).trim() : '') || getCroForRegion(targetRegion, kebunList);
 
     const newKebun = {
       id: newId,
-      cro: (p.cro || '-').trim(),
+      cro: targetCro,
       region: targetRegion,
       region_raw: `Regional ${targetRegion}`,
       nama_kebun: targetNamaKebun,
