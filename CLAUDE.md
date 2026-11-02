@@ -58,6 +58,12 @@ Jika menambahkan kolom bulan baru (misal Oktober, November, dst.), ikuti urutan 
 5. **Verifikasi:** Uji nilai dengan restart dev server dan verifikasi export Excel.
 6. **Perbarui Dokumentasi:** Perbarui `.agents/AGENTS.md` dan `CLAUDE.md`.
 
+### F. Context-Aware Automatic Derivation with Role-Based Access Control (RBAC) CRO Rule
+1. **Context-Aware Auto-Detection:** Saat akun regional membuka form Tambah Kebun, atribut `CRO` WAJIB terisi otomatis (*pre-populated / auto-selected*) berdasarkan pemetaan regional akun yang login (`REGION_TO_CRO_MAP`) dengan fallback pencarian pada data kebun aktif.
+2. **Read-Only / Non-interactive for Regional Accounts:** Untuk akun regional, field CRO pada form Tambah Kebun dan modal Edit Kebun WAJIB berstatus **Read-Only / Terkunci** (bukan dropdown pilihan manual yang harus diisi), dengan indikator visual *🔒 Otomatis sesuai Region*, untuk mencegah salah input atau inkonsistensi antar-CRO.
+3. **Editable for Admin:** Hanya akun Admin (di `laporan_produksi.html`) yang memiliki kontrol dropdown interaktif (`CRO I` s/d `CRO XI`) untuk mengubah atau menyesuaikan CRO suatu kebun jika terjadi pemekaran wilayah di masa depan.
+4. **Backend Persistence in `updateTK` & `addKebun`:** Endpoint `api/kebunTK.js` WAJIB menerima `cro`, memperbarui kolom `cro` pada database Supabase (`data_kebun_tk`) dan fallback JSON lokal secara sinkron.
+
 ---
 
 ## 3. Konteks Migrasi & Ruang Lingkup Proyek

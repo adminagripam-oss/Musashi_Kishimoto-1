@@ -73,5 +73,10 @@
 2. **Mandatory Handoff Tracking (`AGENT_HANDOFF.md`):** Always check `AGENT_HANDOFF.md` before starting work. Upon completing a task or milestone, update `AGENT_HANDOFF.md` with current status, modified files, and handoff instructions for the peer agent.
 3. **Synchronized Rules (`CLAUDE.md`):** Any updates or additions to architectural rules in `AGENTS.md` MUST be reflected in `CLAUDE.md` so that both Claude Code and Antigravity operate under identical constraints.
 
-
+### Context-Aware Automatic Derivation with Role-Based Access Control (RBAC) CRO Rule
+**When implementing or modifying Kebun forms, modals, and APIs (Add Kebun & Edit Kebun) in `login.html`, `laporan_produksi.html`, and `api/kebunTK.js`:**
+1. **Context-Aware Auto-Detection:** Saat akun regional membuka form Tambah Kebun, atribut `CRO` WAJIB terisi otomatis (*pre-populated / auto-selected*) berdasarkan pemetaan regional akun yang login (`REGION_TO_CRO_MAP`) dengan fallback pencarian pada data kebun aktif.
+2. **Read-Only / Non-interactive for Regional Accounts:** Untuk akun regional, field CRO pada form Tambah Kebun dan modal Edit Kebun WAJIB berstatus **Read-Only / Terkunci** (bukan dropdown pilihan manual yang harus diisi), dengan indikator visual *🔒 Otomatis sesuai Region*, untuk mencegah salah input atau inkonsistensi antar-CRO.
+3. **Editable for Admin:** Hanya akun Admin (di `laporan_produksi.html`) yang memiliki kontrol dropdown interaktif (`CRO I` s/d `CRO XI`) untuk mengubah atau menyesuaikan CRO suatu kebun jika terjadi pemekaran wilayah di masa depan.
+4. **Backend Persistence in `updateTK` & `addKebun`:** Endpoint `api/kebunTK.js` WAJIB menerima `cro`, memperbarui kolom `cro` pada database Supabase (`data_kebun_tk`) dan fallback JSON lokal secara sinkron.
 

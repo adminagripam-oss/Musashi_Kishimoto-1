@@ -1983,6 +1983,53 @@
 
 
 
+    var REGION_TO_CRO_MAP = {
+      'Aceh': 'CRO I',
+      'Sumut 1': 'CRO I',
+      'Sumut 2': 'CRO I',
+      'Riau 1': 'CRO II',
+      'Riau 2': 'CRO III',
+      'Riau 3': 'CRO III',
+      'Riau 4': 'CRO IV',
+      'Sumbar': 'CRO V',
+      'Sumatera Barat': 'CRO V',
+      'Jambi': 'CRO V',
+      'Babel': 'CRO V',
+      'Bangka Belitung': 'CRO V',
+      'Sumsel': 'CRO V',
+      'Sumatera Selatan': 'CRO V',
+      'Kalbar 1': 'CRO VI',
+      'Kalbar 2': 'CRO VI',
+      'Kalsel 1': 'CRO VII',
+      'Kalsel 2': 'CRO VII',
+      'Kaltara': 'CRO VII',
+      'Kaltim': 'CRO VII',
+      'Kalteng 1': 'CRO VIII',
+      'Kalteng 3': 'CRO VIII',
+      'Kalteng 2': 'CRO IX',
+      'Sulteng': 'CRO X',
+      'Sultra': 'CRO X',
+      'Papua Selatan': 'CRO XI'
+    };
+
+    function detectCroForRegion(regionName) {
+      if (!regionName) return 'CRO I';
+      var rTrim = String(regionName).trim();
+      if (REGION_TO_CRO_MAP[rTrim]) return REGION_TO_CRO_MAP[rTrim];
+      var rLower = rTrim.toLowerCase();
+      var foundKey = Object.keys(REGION_TO_CRO_MAP).find(function (k) {
+        return k.toLowerCase() === rLower;
+      });
+      if (foundKey) return REGION_TO_CRO_MAP[foundKey];
+      if (globalTKData && Array.isArray(globalTKData)) {
+        var match = globalTKData.find(function (k) {
+          return k.region && k.region.toLowerCase() === rLower && k.cro;
+        });
+        if (match && match.cro) return match.cro;
+      }
+      return 'CRO I';
+    }
+
     function saveEditKebunForm(e) {
       if (e && e.preventDefault) e.preventDefault();
       if (!activeEditingKebunData) return;
@@ -1990,9 +2037,43 @@
       var id = activeEditingKebunData.id;
       if (!globalTKEdits[id]) globalTKEdits[id] = {};
 
-      Object.keys(activeEditingValues).forEach(function (fKey) {
-        globalTKEdits[id][fKey] = activeEditingValues[fKey];
-      });
+      var croEl = document.getElementById("editCro");
+      if (croEl && croEl.value) {
+        globalTKEdits[id].cro = croEl.value;
+        activeEditingKebunData.cro = croEl.value;
+      }
+      var luasanEl = document.getElementById("editLuasanLahan");
+      if (luasanEl) {
+        globalTKEdits[id].luasan = parseFloat(luasanEl.value) || 0;
+        activeEditingKebunData.luasan = globalTKEdits[id].luasan;
+      }
+      var reqEl = document.getElementById("editReqTK");
+      if (reqEl) {
+        globalTKEdits[id].req_tk = parseInt(reqEl.value, 10) || 0;
+        activeEditingKebunData.req_tk = globalTKEdits[id].req_tk;
+      }
+
+      var tkJuniEl = document.getElementById("editTKJuniVal");
+      if (tkJuniEl) globalTKEdits[id].tk_juni = parseInt(tkJuniEl.value, 10) || 0;
+      var tkJuliEl = document.getElementById("editTKJuliVal");
+      if (tkJuliEl) globalTKEdits[id].tk_juli = parseInt(tkJuliEl.value, 10) || 0;
+      var tkAgsEl = document.getElementById("editTKAgustusVal");
+      if (tkAgsEl) globalTKEdits[id].tk_agustus = parseInt(tkAgsEl.value, 10) || 0;
+      var tkSepEl = document.getElementById("editTKSeptVal");
+      if (tkSepEl) globalTKEdits[id].tk_september = parseInt(tkSepEl.value, 10) || 0;
+      var tkOktEl = document.getElementById("editTKOktoberVal");
+      if (tkOktEl) globalTKEdits[id].tk_oktober = parseInt(tkOktEl.value, 10) || 0;
+
+      var tgtJuliEl = document.getElementById("editTargetJuliVal");
+      if (tgtJuliEl) globalTKEdits[id].target_juli = parseInt(tgtJuliEl.value, 10) || 0;
+      var tgtAgsEl = document.getElementById("editTargetAgsVal");
+      if (tgtAgsEl) globalTKEdits[id].target_agustus = parseInt(tgtAgsEl.value, 10) || 0;
+      var tgtSepEl = document.getElementById("editTargetSeptVal");
+      if (tgtSepEl) globalTKEdits[id].target_september = parseInt(tgtSepEl.value, 10) || 0;
+      var tgtOktEl = document.getElementById("editTargetOktoberVal");
+      if (tgtOktEl) globalTKEdits[id].target_oktober = parseInt(tgtOktEl.value, 10) || 0;
+      var tgtNovEl = document.getElementById("editTargetNovemberVal");
+      if (tgtNovEl) globalTKEdits[id].target_november = parseInt(tgtNovEl.value, 10) || 0;
 
       closeEditKebunModal();
 
@@ -2502,37 +2583,36 @@
         regionInput.className = "w-full px-3.5 py-2 bg-slate-50 dark:bg-[#1E1E1E] border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed";
       }
 
-      var defaultCro = "CRO 1";
-      if (!isUserAdmin && s.region && globalTKData) {
-        var match = globalTKData.find(function (k) {
-          return k.region && k.region.toLowerCase() === s.region.toLowerCase();
-        });
-        if (match && match.cro) {
-          defaultCro = match.cro;
+      var defaultCro = detectCroForRegion(s.region, globalTKData);
+
+      var croSelect = document.getElementById("addCro");
+      var croBadge = document.getElementById("addCroBadge");
+      if (croSelect) {
+        croSelect.value = defaultCro;
+        if (isUserAdmin) {
+          croSelect.removeAttribute("disabled");
+          croSelect.className = "w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 cursor-pointer";
+          if (croBadge) croBadge.textContent = "Admin";
+        } else {
+          croSelect.setAttribute("disabled", "disabled");
+          croSelect.className = "w-full px-3.5 py-2 bg-slate-100 dark:bg-[#1E1E1E] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-black text-slate-700 dark:text-slate-300 cursor-not-allowed shadow-inner pointer-events-none";
+          if (croBadge) croBadge.textContent = "🔒 Otomatis";
         }
       }
 
-      var croSelect = document.getElementById("addCro");
-      if (isUserAdmin) {
-        croSelect.removeAttribute("disabled");
-        croSelect.className = "w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500";
-      } else {
-        croSelect.setAttribute("disabled", "disabled");
-        croSelect.className = "w-full px-3.5 py-2 bg-slate-50 dark:bg-[#1E1E1E] border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed";
-      }
-
       document.getElementById("addNamaKebun").value = "";
-      croSelect.value = defaultCro;
       document.getElementById("addLuasan").value = "0";
       document.getElementById("addReqTK").value = "0";
       document.getElementById("addTKJuniVal").value = "0";
       document.getElementById("addTKJuliVal").value = "0";
       document.getElementById("addTKAgustusVal").value = "0";
       if (document.getElementById("addTKSeptVal")) document.getElementById("addTKSeptVal").value = "0";
+      if (document.getElementById("addTKOktoberVal")) document.getElementById("addTKOktoberVal").value = "0";
       document.getElementById("addTargetJuliVal").value = "0";
       document.getElementById("addTargetAgsVal").value = "0";
       document.getElementById("addTargetSeptVal").value = "0";
       if (document.getElementById("addTargetOktoberVal")) document.getElementById("addTargetOktoberVal").value = "0";
+      if (document.getElementById("addTargetNovemberVal")) document.getElementById("addTargetNovemberVal").value = "0";
 
       var sheet = document.getElementById("addKebunSheet");
       var backdrop = document.getElementById("addKebunBackdrop");
@@ -2555,7 +2635,7 @@
 
       var payload = {
         nama_kebun: document.getElementById("addNamaKebun").value.trim(),
-        cro: document.getElementById("addCro").value,
+        cro: (document.getElementById("addCro") ? document.getElementById("addCro").value : "") || detectCroForRegion(document.getElementById("addRegion").value.trim(), globalTKData),
         region: document.getElementById("addRegion").value.trim(),
         luasan: parseFloat(document.getElementById("addLuasan").value) || 0,
         req_tk: parseInt(document.getElementById("addReqTK").value, 10) || 0,
@@ -2615,8 +2695,25 @@
       activeEditingKebunData = item;
       var editObj = globalTKEdits[id] || {};
 
+      var s = loadSession() || {};
+      var isUserAdmin = (s.region && s.region.toUpperCase() === "ADMIN");
+
       document.getElementById("editKebunId").value = id;
       document.getElementById("editNamaKebun").value = item.nama_kebun || "-";
+      var editCroEl = document.getElementById("editCro");
+      var editCroBadge = document.getElementById("editCroBadge");
+      if (editCroEl) {
+        editCroEl.value = editObj.cro || item.cro || detectCroForRegion(item.region || s.region, globalTKData);
+        if (isUserAdmin) {
+          editCroEl.removeAttribute("disabled");
+          editCroEl.className = "w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 cursor-pointer";
+          if (editCroBadge) editCroBadge.textContent = "Admin";
+        } else {
+          editCroEl.setAttribute("disabled", "disabled");
+          editCroEl.className = "w-full px-3.5 py-2 bg-slate-100 dark:bg-[#1E1E1E] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-black text-slate-700 dark:text-slate-300 cursor-not-allowed shadow-inner pointer-events-none";
+          if (editCroBadge) editCroBadge.textContent = "🔒 Terkunci";
+        }
+      }
       document.getElementById("editLuasanLahan").value = item.luasan || 0;
 
       var reqTk = parseInt(item.req_tk, 10) || 0;
@@ -2679,6 +2776,7 @@
       if (!activeEditingKebunData) return;
 
       var id = activeEditingKebunData.id;
+      var vCro = document.getElementById("editCro") ? document.getElementById("editCro").value : (activeEditingKebunData.cro || "CRO I");
       var vReqTK = Math.max(0, parseInt(document.getElementById("editReqTK").value, 10) || 0);
       var vLuasan = Math.max(0, parseFloat(document.getElementById("editLuasanLahan").value) || 0);
       var vJuni = Math.max(0, parseFloat(document.getElementById("editTKJuniVal").value) || 0);
@@ -2693,6 +2791,7 @@
       var vTarNov = document.getElementById("editTargetNovemberVal") ? Math.max(0, parseFloat(document.getElementById("editTargetNovemberVal").value) || 0) : 0;
 
       if (!globalTKEdits[id]) globalTKEdits[id] = {};
+      globalTKEdits[id].cro = vCro;
       globalTKEdits[id].req_tk = vReqTK;
       globalTKEdits[id].luasan = vLuasan;
       globalTKEdits[id].tk_juni = vJuni;
@@ -2707,6 +2806,7 @@
       globalTKEdits[id].target_november = vTarNov;
 
       // Update memory state so table re-renders instantly
+      activeEditingKebunData.cro = vCro;
       activeEditingKebunData.req_tk = vReqTK;
       activeEditingKebunData.luasan = vLuasan;
       activeEditingKebunData.tk_juni = vJuni;
@@ -2722,6 +2822,7 @@
 
       var item = (globalTKData || []).find(function (k) { return k.id === id; });
       if (item) {
+        item.cro = vCro;
         item.req_tk = vReqTK;
         item.luasan = vLuasan;
         item.tk_juni = vJuni;
@@ -7351,11 +7452,33 @@
       <form id="editKebunForm" onsubmit="saveEditKebunForm(event)" class="py-6 space-y-4">
         <input type="hidden" id="editKebunId" />
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Kebun / PT HO</label>
-          <input type="text" id="editNamaKebun"
-            class="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#1E1E1E] border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-900 dark:text-white"
-            readonly />
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Kebun / PT HO</label>
+            <input type="text" id="editNamaKebun"
+              class="w-full px-3.5 py-2 bg-slate-50 dark:bg-[#1E1E1E] border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-extrabold text-slate-900 dark:text-white"
+              readonly />
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">CRO</label>
+              <span id="editCroBadge" class="text-[10px] font-semibold text-slate-400">🔒 Terkunci</span>
+            </div>
+            <select id="editCro"
+              class="w-full px-3.5 py-2 bg-slate-100 dark:bg-[#1E1E1E] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-black text-slate-700 dark:text-slate-300 cursor-not-allowed shadow-inner pointer-events-none" disabled>
+              <option value="CRO I">CRO I</option>
+              <option value="CRO II">CRO II</option>
+              <option value="CRO III">CRO III</option>
+              <option value="CRO IV">CRO IV</option>
+              <option value="CRO V">CRO V</option>
+              <option value="CRO VI">CRO VI</option>
+              <option value="CRO VII">CRO VII</option>
+              <option value="CRO VIII">CRO VIII</option>
+              <option value="CRO IX">CRO IX</option>
+              <option value="CRO X">CRO X</option>
+              <option value="CRO XI">CRO XI</option>
+            </select>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -7515,25 +7638,29 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">CRO</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">CRO</label>
+              <span id="addCroBadge" class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">🔒 Otomatis</span>
+            </div>
             <select id="addCro"
-              class="w-full px-3.5 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500">
-              <option value="CRO 1">CRO 1</option>
-              <option value="CRO 2">CRO 2</option>
-              <option value="CRO 3">CRO 3</option>
-              <option value="CRO 4">CRO 4</option>
-              <option value="CRO 5">CRO 5</option>
-              <option value="CRO 6">CRO 6</option>
-              <option value="CRO 7">CRO 7</option>
-              <option value="CRO 8">CRO 8</option>
-              <option value="CRO 9">CRO 9</option>
-              <option value="CRO 10">CRO 10</option>
-              <option value="CRO 11">CRO 11</option>
+              class="w-full px-3.5 py-2 bg-slate-100 dark:bg-[#1E1E1E] border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-black text-slate-700 dark:text-slate-300 cursor-not-allowed shadow-inner pointer-events-none" disabled>
+              <option value="CRO I">CRO I</option>
+              <option value="CRO II">CRO II</option>
+              <option value="CRO III">CRO III</option>
+              <option value="CRO IV">CRO IV</option>
+              <option value="CRO V">CRO V</option>
+              <option value="CRO VI">CRO VI</option>
+              <option value="CRO VII">CRO VII</option>
+              <option value="CRO VIII">CRO VIII</option>
+              <option value="CRO IX">CRO IX</option>
+              <option value="CRO X">CRO X</option>
+              <option value="CRO XI">CRO XI</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Region</label>
             <input type="text" id="addRegion" required placeholder="Contoh: Riau 2"
+              oninput="if(typeof detectCroForRegion === 'function'){ var c = detectCroForRegion(this.value, globalTKData); var el = document.getElementById('addCro'); if(el) el.value = c; }"
               class="w-full px-3.5 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs font-bold" />
           </div>
         </div>

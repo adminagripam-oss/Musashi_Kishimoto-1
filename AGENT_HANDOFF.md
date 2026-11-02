@@ -7,7 +7,7 @@ File ini berfungsi sebagai buku kendali koordinasi antara **Antigravity (IDE Age
 ## 📌 Status Terkini
 
 - **Agen Aktif Saat Ini:** `None (Standby / Siap Digunakan)`
-- **Tugas Aktif:** Executive Intelligence Highlight & Reactive Cut-Off Binding (Admin & Regional)
+- **Tugas Aktif:** Context-Aware Automatic Derivation with Role-Based Access Control (RBAC) CRO Rule (Regional Read-Only & Admin Editable)
 - **Branch Git:** `feature/tk-panen-oktober-november`
 - **Waktu Terakhir Diperbarui:** 2026-11-02
 
@@ -17,18 +17,22 @@ File ini berfungsi sebagai buku kendali koordinasi antara **Antigravity (IDE Age
 
 ### Dari: Antigravity ➡️ Ke: Claude Code & User
 - **Ringkasan Perubahan:**
-  1. **Executive Intelligence Highlight Dinamis & Reaktif (`laporan_produksi.html` & `login.html`):**
-     - Sisi kiri: Menampilkan ringkasan defisit cut-off bulan aktif secara reaktif. Jika regional tunggal (akun regional atau filter 1 region di Admin), teks menyatakan defisit region tersebut (`Region [Nama] mengalami Kekurangan tenaga Panen [X] Orang`). Jika mencakup multi-region (Admin "ALL"), teks menyatakan defisit keseluruhan.
-     - Sisi kanan: Merinci kebun-kebun defisit (`[Nama Kebun] Kekurangan [X] Orang`) pada tampilan single-region, atau merinci regional-regional defisit pada tampilan multi-region.
-  2. **Interaktif Cut-Off Month Selector:**
-     - Menambahkan dropdown pilihan bulan Cut-Off (`Mei`, `Juni`, `Juli`, `Agustus`, `September`, `Oktober` - default: `Oktober`) di toolbar samping pencarian/filter regional pada Admin (`laporan_produksi.html`) dan Regional (`login.html`).
-  3. **Sinkronisasi Reaktif Kartu KPI & Highlight:**
-     - Kartu KPI ke-4 (`TK [Bulan] (Cut Off [Bulan])`) dan ke-5 (`Kekurangan Tenaga Panen`) serta Executive Highlight terikat langsung pada state `activeCutOffMonth` / `currentCutOffMonth` dan data in-memory aktif (termasuk edit inline seketika sebelum/sesudah disimpan).
+  1. **Deteksi Otomatis CRO Terkunci (Read-Only) untuk Regional (`login.html` & `laporan_produksi.html`):**
+     - Pada form Tambah Kebun dan modal Edit Data Kebun, atribut `CRO` langsung terdeteksi otomatis sesuai regional login user (`REGION_TO_CRO_MAP`) dalam format Romawi standar (`CRO I` s/d `CRO XI`).
+     - Field CRO dikunci (`read-only` / `disabled`) dengan badge visual `🔒 Otomatis` (Tambah Kebun) dan `🔒 Terkunci` (Edit Kebun). Pengguna regional tidak perlu dan tidak dapat mengisi/memilih dropdown manual.
+  2. **Kontrol Penuh untuk Admin (`laporan_produksi.html`):**
+     - Akun Admin tetap memiliki dropdown interaktif `CRO I` s/d `CRO XI` dengan fitur auto-suggest responsif saat mengetik nama region, serta hak mengubah CRO kebun saat edit data.
+  3. **Backend Persistence & Fallback Harmonisasi (`api/kebunTK.js`):**
+     - Endpoint `addKebun` dan `updateTK` menyimpan dan memperbarui atribut `cro` secara sinkron ke database Supabase dan local JSON fallback.
+     - Perbaikan penomoran ID baru (`newId = maxId + 1`) pada `addKebun`.
+     - Data 10 kebun Sumut 2 telah diharmonisasi secara konsisten ke `CRO I`.
   4. **Aturan Arsitektur (`.agents/AGENTS.md` & `CLAUDE.md`):**
-     - Ditambahkan aturan `Executive Intelligence Highlight & Reactive Cut-Off Rule` pada kedua file konfigurasi agen.
+     - Ditambahkan aturan `Context-Aware Automatic Derivation with Role-Based Access Control (RBAC) CRO Rule`.
 - **File Terkait:**
-  - `laporan_produksi.html` (diperbarui)
   - `login.html` (diperbarui)
+  - `laporan_produksi.html` (diperbarui)
+  - `api/kebunTK.js` (diperbarui)
+  - `data_kebun_tk.json` (diperbarui)
   - `.agents/AGENTS.md` (diperbarui)
   - `CLAUDE.md` (diperbarui)
   - `AGENT_HANDOFF.md` (diperbarui)
@@ -44,3 +48,4 @@ File ini berfungsi sebagai buku kendali koordinasi antara **Antigravity (IDE Age
 | 1 | 2026-10-27 | Antigravity | Claude Code & User | Setup kolaborasi ganda (`CLAUDE.md` & `AGENT_HANDOFF.md`) | Selesai |
 | 2 | 2026-11-02 | Antigravity | Claude Code & User | Ekspansi Kolom TK Panen Oktober & November (DB, API, Regional & Admin UI, Excel Export) | Selesai |
 | 3 | 2026-11-02 | Antigravity | Claude Code & User | Executive Intelligence Highlight Reaktif & Dynamic Cut-Off Month Selector (Admin & Regional) | Selesai |
+| 4 | 2026-11-02 | Antigravity | Claude Code & User | Context-Aware Automatic Derivation with RBAC CRO Rule (Regional Read-Only & Admin Editable) | Selesai |
