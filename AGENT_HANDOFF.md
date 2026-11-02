@@ -20,13 +20,21 @@ File ini berfungsi sebagai buku kendali koordinasi antara **Antigravity (IDE Age
   1. **Deteksi Otomatis CRO Terkunci (Read-Only) untuk Regional (`login.html` & `laporan_produksi.html`):**
      - Pada form Tambah Kebun dan modal Edit Data Kebun, atribut `CRO` langsung terdeteksi otomatis sesuai regional login user (`REGION_TO_CRO_MAP`) dalam format Romawi standar (`CRO I` s/d `CRO XI`).
      - Field CRO dikunci (`read-only` / `disabled`) dengan badge visual `🔒 Otomatis` (Tambah Kebun) dan `🔒 Terkunci` (Edit Kebun). Pengguna regional tidak perlu dan tidak dapat mengisi/memilih dropdown manual.
-  2. **Kontrol Penuh untuk Admin (`laporan_produksi.html`):**
+  2. **Penyempurnaan Pemetaan Nama Regional Formal & Heuristik 4 Lapis:**
+     - Menambahkan seluruh varian nama regional formal (misal: `Kalimantan Barat 1A`, `Kalimantan Barat 1B`, `Kalimantan Barat 2`, `Kalimantan Tengah 2`, `Kalimantan Selatan 1`, dll.) ke `REGION_TO_CRO_MAP` di `login.html`, `laporan_produksi.html`, dan `api/kebunTK.js`.
+     - Algoritma `detectCroForRegion` dan `getCroForRegion` diperkuat dengan 4 lapis pencarian:
+       1. *Direct Dictionary Lookup* (exact & case-insensitive)
+       2. *Active Dataset Overlap* (mencocokkan dengan kebun pada tabel aktif)
+       3. *Keyword Heuristic Matching* (deteksi kata kunci `kalbar`/`kalimantan barat` ➔ `CRO VI`, `kalteng 2` ➔ `CRO IX`, dll.)
+       4. *Active Dataset Fallback* (mengambil CRO dari item pertama kebun aktif)
+     - Terverifikasi langsung pada browser: akun `Kalimantan Barat 1B` secara presisi menampilkan **`CRO VI`**.
+  3. **Kontrol Penuh untuk Admin (`laporan_produksi.html`):**
      - Akun Admin tetap memiliki dropdown interaktif `CRO I` s/d `CRO XI` dengan fitur auto-suggest responsif saat mengetik nama region, serta hak mengubah CRO kebun saat edit data.
-  3. **Backend Persistence & Fallback Harmonisasi (`api/kebunTK.js`):**
+  4. **Backend Persistence & Fallback Harmonisasi (`api/kebunTK.js`):**
      - Endpoint `addKebun` dan `updateTK` menyimpan dan memperbarui atribut `cro` secara sinkron ke database Supabase dan local JSON fallback.
      - Perbaikan penomoran ID baru (`newId = maxId + 1`) pada `addKebun`.
      - Data 10 kebun Sumut 2 telah diharmonisasi secara konsisten ke `CRO I`.
-  4. **Aturan Arsitektur (`.agents/AGENTS.md` & `CLAUDE.md`):**
+  5. **Aturan Arsitektur (`.agents/AGENTS.md` & `CLAUDE.md`):**
      - Ditambahkan aturan `Context-Aware Automatic Derivation with Role-Based Access Control (RBAC) CRO Rule`.
 - **File Terkait:**
   - `login.html` (diperbarui)

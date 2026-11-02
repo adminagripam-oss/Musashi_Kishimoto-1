@@ -40,13 +40,26 @@ function normalizeRegion(rStr) {
 }
 
 const REGION_TO_CRO_MAP = {
+  // CRO I
   'Aceh': 'CRO I',
   'Sumut 1': 'CRO I',
+  'Sumatera Utara 1': 'CRO I',
   'Sumut 2': 'CRO I',
+  'Sumatera Utara 2': 'CRO I',
+  'Sumatera Utara 2 Ex Torganda': 'CRO I',
+  'Sumut 2 Ex Torganda': 'CRO I',
+
+  // CRO II
   'Riau 1': 'CRO II',
+
+  // CRO III
   'Riau 2': 'CRO III',
   'Riau 3': 'CRO III',
+
+  // CRO IV
   'Riau 4': 'CRO IV',
+
+  // CRO V
   'Sumbar': 'CRO V',
   'Sumatera Barat': 'CRO V',
   'Jambi': 'CRO V',
@@ -54,30 +67,91 @@ const REGION_TO_CRO_MAP = {
   'Bangka Belitung': 'CRO V',
   'Sumsel': 'CRO V',
   'Sumatera Selatan': 'CRO V',
+
+  // CRO VI
   'Kalbar 1': 'CRO VI',
+  'Kalbar 1A': 'CRO VI',
+  'Kalbar 1B': 'CRO VI',
   'Kalbar 2': 'CRO VI',
+  'Kalimantan Barat 1': 'CRO VI',
+  'Kalimantan Barat 1A': 'CRO VI',
+  'Kalimantan Barat 1B': 'CRO VI',
+  'Kalimantan Barat 2': 'CRO VI',
+
+  // CRO VII
   'Kalsel 1': 'CRO VII',
+  'Kalimantan Selatan 1': 'CRO VII',
   'Kalsel 2': 'CRO VII',
+  'Kalimantan Selatan 2': 'CRO VII',
   'Kaltara': 'CRO VII',
+  'Kalimantan Utara': 'CRO VII',
   'Kaltim': 'CRO VII',
+  'Kalimantan Timur': 'CRO VII',
+
+  // CRO VIII
   'Kalteng 1': 'CRO VIII',
+  'Kalimantan Tengah 1': 'CRO VIII',
   'Kalteng 3': 'CRO VIII',
+  'Kalimantan Tengah 3': 'CRO VIII',
+
+  // CRO IX
   'Kalteng 2': 'CRO IX',
+  'Kalimantan Tengah 2': 'CRO IX',
+
+  // CRO X
   'Sulteng': 'CRO X',
+  'Sulawesi Tengah': 'CRO X',
   'Sultra': 'CRO X',
+  'Sulawesi Tenggara': 'CRO X',
+
+  // CRO XI
+  'Papua': 'CRO XI',
   'Papua Selatan': 'CRO XI'
 };
 
 function getCroForRegion(regionName, existingList) {
   if (!regionName) return 'CRO I';
-  const norm = normalizeRegion(regionName);
+  const clean = String(regionName).trim();
+  const upper = clean.toUpperCase();
+  if (upper === 'ADMIN' || upper === 'ALL') return 'CRO I';
+
+  // 1. Direct dictionary lookup
+  const norm = normalizeRegion(clean);
   for (const [rKey, croVal] of Object.entries(REGION_TO_CRO_MAP)) {
     if (normalizeRegion(rKey) === norm) return croVal;
   }
+
+  // 2. Existing list / table dataset lookup
   if (Array.isArray(existingList)) {
-    const match = existingList.find(k => k.region && normalizeRegion(k.region) === norm && k.cro);
+    const match = existingList.find(k => {
+      if (!k || !k.cro) return false;
+      const kNorm = normalizeRegion(k.region || '');
+      return kNorm === norm || norm.includes(kNorm) || kNorm.includes(norm);
+    });
     if (match && match.cro) return match.cro;
   }
+
+  // 3. Keyword / Prefix heuristic matching
+  const lower = clean.toLowerCase();
+  if (lower.includes('kalbar') || lower.includes('kalimantan barat')) return 'CRO VI';
+  if (lower.includes('kalsel') || lower.includes('kalimantan selatan')) return 'CRO VII';
+  if (lower.includes('kaltara') || lower.includes('kalimantan utara')) return 'CRO VII';
+  if (lower.includes('kaltim') || lower.includes('kalimantan timur')) return 'CRO VII';
+  if (lower.includes('kalteng 2') || lower.includes('kalimantan tengah 2')) return 'CRO IX';
+  if (lower.includes('kalteng') || lower.includes('kalimantan tengah')) return 'CRO VIII';
+  if (lower.includes('sulteng') || lower.includes('sulawesi tengah')) return 'CRO X';
+  if (lower.includes('sultra') || lower.includes('sulawesi tenggara')) return 'CRO X';
+  if (lower.includes('riau 1')) return 'CRO II';
+  if (lower.includes('riau 2') || lower.includes('riau 3')) return 'CRO III';
+  if (lower.includes('riau 4')) return 'CRO IV';
+  if (lower.includes('sumbar') || lower.includes('sumatera barat') ||
+      lower.includes('sumsel') || lower.includes('sumatera selatan') ||
+      lower.includes('jambi') || lower.includes('babel') ||
+      lower.includes('bangka')) return 'CRO V';
+  if (lower.includes('aceh') || lower.includes('sumut') ||
+      lower.includes('sumatera utara') || lower.includes('torganda')) return 'CRO I';
+  if (lower.includes('papua')) return 'CRO XI';
+
   return 'CRO I';
 }
 
