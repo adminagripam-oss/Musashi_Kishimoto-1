@@ -25,4 +25,7 @@ kebun_test.json
 check_supa.js
 test_edit.js
 test_update.js
+graphify-out/
+pnpm-lock.yaml
+pnpm-workspace.yaml
 

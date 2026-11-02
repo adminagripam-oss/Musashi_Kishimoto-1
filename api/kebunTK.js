@@ -63,6 +63,9 @@ function saveKebunData(list) {
 
 module.exports = async (req, res) => {
   applyCors(req, res);
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const p = { ...req.query, ...req.body };
@@ -95,7 +98,9 @@ module.exports = async (req, res) => {
           tk_agustus: k.tk_agustus !== undefined && k.tk_agustus !== null ? k.tk_agustus : (fb.tk_agustus || 0),
           target_september: k.target_september !== undefined && k.target_september !== null ? k.target_september : (fb.target_september || 0),
           tk_september: k.tk_september !== undefined && k.tk_september !== null ? k.tk_september : (fb.tk_september || 0),
-          target_oktober: k.target_oktober !== undefined && k.target_oktober !== null ? k.target_oktober : (fb.target_oktober || 0)
+          target_oktober: k.target_oktober !== undefined && k.target_oktober !== null ? k.target_oktober : (fb.target_oktober || 0),
+          tk_oktober: k.tk_oktober !== undefined && k.tk_oktober !== null ? k.tk_oktober : (fb.tk_oktober || 0),
+          target_november: k.target_november !== undefined && k.target_november !== null ? k.target_november : (fb.target_november || 0)
         };
       });
     }
@@ -133,10 +138,9 @@ module.exports = async (req, res) => {
       return 0;
     });
 
-    // Default Cut-off month set to September
-    const targetMonthStr = "september";
-    const tkField = "tk_september";
-    const cutOffLabel = "September";
+    const targetMonthStr = "oktober";
+    const tkField = "tk_oktober";
+    const cutOffLabel = "Oktober";
 
     // Calculate summary statistics
     const totalLuas = result.reduce((sum, item) => sum + (parseFloat(item.luasan) || 0), 0);
@@ -207,6 +211,9 @@ module.exports = async (req, res) => {
           if (edit.target_oktober !== undefined && edit.target_oktober !== null) {
             item.target_oktober = Math.max(0, parseFloat(edit.target_oktober) || 0);
           }
+          if (edit.target_november !== undefined && edit.target_november !== null) {
+            item.target_november = Math.max(0, parseFloat(edit.target_november) || 0);
+          }
           if (edit.tk_juli !== undefined && edit.tk_juli !== null) {
             item.tk_juli = Math.max(0, parseFloat(edit.tk_juli) || 0);
           }
@@ -216,11 +223,13 @@ module.exports = async (req, res) => {
           if (edit.tk_september !== undefined && edit.tk_september !== null) {
             item.tk_september = Math.max(0, parseFloat(edit.tk_september) || 0);
           }
+          if (edit.tk_oktober !== undefined && edit.tk_oktober !== null) {
+            item.tk_oktober = Math.max(0, parseFloat(edit.tk_oktober) || 0);
+          }
           item.updated_by = regionParam;
           item.updated_at = nowIso;
           updatedCount++;
 
-          // Attempt Supabase update (with fallback for missing columns)
           try {
             const fullPayload = {
               req_tk: item.req_tk,
@@ -230,16 +239,17 @@ module.exports = async (req, res) => {
               target_agustus: item.target_agustus,
               target_september: item.target_september,
               target_oktober: item.target_oktober,
+              target_november: item.target_november,
               tk_juli: item.tk_juli,
               tk_agustus: item.tk_agustus,
               tk_september: item.tk_september,
+              tk_oktober: item.tk_oktober,
               updated_by: regionParam,
               updated_at: nowIso
             };
             const { error: sbErr } = await supabase.from('data_kebun_tk').update(fullPayload).eq('id', targetId);
             if (sbErr) {
               console.error(`[kebunTK] Supabase update fullPayload failed for id=${targetId}:`, sbErr.message, sbErr.details);
-              // Fallback: update all known fields (now including September/Oktober so they aren't lost)
               const safePayload = {
                 req_tk: item.req_tk,
                 luasan: item.luasan,
@@ -248,7 +258,9 @@ module.exports = async (req, res) => {
                 target_agustus: item.target_agustus,
                 target_september: item.target_september,
                 target_oktober: item.target_oktober,
+                target_november: item.target_november,
                 tk_september: item.tk_september,
+                tk_oktober: item.tk_oktober,
                 updated_by: regionParam,
                 updated_at: nowIso
               };
@@ -376,9 +388,11 @@ module.exports = async (req, res) => {
       target_agustus: parseInt(p.target_agustus, 10) || 0,
       target_september: parseInt(p.target_september, 10) || 0,
       target_oktober: parseInt(p.target_oktober, 10) || 0,
+      target_november: parseInt(p.target_november, 10) || 0,
       tk_juli: parseInt(p.tk_juli, 10) || 0,
       tk_agustus: parseInt(p.tk_agustus, 10) || 0,
       tk_september: parseInt(p.tk_september, 10) || 0,
+      tk_oktober: parseInt(p.tk_oktober, 10) || 0,
       updated_by: regionParam,
       updated_at: new Date().toISOString(),
       created_at: new Date().toISOString()
