@@ -39,6 +39,40 @@ function normalizeRegion(rStr) {
   return s;
 }
 
+// Maps any region name (formal or abbreviated) to the canonical abbreviation stored in DB.
+// Prevents duplicates like 'Kalbar 2' vs 'Kalimantan Barat 2'.
+function canonicalizeRegion(rStr) {
+  if (!rStr) return rStr;
+  const norm = normalizeRegion(rStr);
+  // Title-case map: norm (UPPER) → canonical stored DB value
+  const MAP = {
+    'ACEH': 'Aceh',
+    'SUMUT 1': 'Sumut 1',
+    'SUMUT 2': 'Sumut 2',
+    'RIAU 1': 'Riau 1',
+    'RIAU 2': 'Riau 2',
+    'RIAU 3': 'Riau 3',
+    'RIAU 4': 'Riau 4',
+    'BABEL': 'Babel',
+    'JAMBI': 'Jambi',
+    'SUMBAR': 'Sumbar',
+    'SUMSEL': 'Sumsel',
+    'KALBAR 1': 'Kalbar 1',
+    'KALBAR 2': 'Kalbar 2',
+    'KALSEL 1': 'Kalsel 1',
+    'KALSEL 2': 'Kalsel 2',
+    'KALTIM': 'Kaltim',
+    'KALTARA': 'Kaltara',
+    'KALTENG 1': 'Kalteng 1',
+    'KALTENG 2': 'Kalteng 2',
+    'KALTENG 3': 'Kalteng 3',
+    'SULTENG': 'Sulteng',
+    'SULTRA': 'Sultra',
+    'PAPUA SELATAN': 'Papua Selatan'
+  };
+  return MAP[norm] || rStr;
+}
+
 const REGION_TO_CRO_MAP = {
   // CRO I
   'Aceh': 'CRO I',
@@ -477,11 +511,12 @@ module.exports = async (req, res) => {
     const isAdmin = regionParam.toUpperCase() === 'ADMIN';
     const userNormRegion = normalizeRegion(regionParam);
 
-    // Prefecture garden values
-    const targetRegion = (p.region || '').trim();
-    if (!targetRegion) {
+    // Prefecture garden values — canonicalize to prevent 'Kalimantan Barat 2' vs 'Kalbar 2' duplicates
+    const targetRegionRaw = (p.region || '').trim();
+    if (!targetRegionRaw) {
       return res.json({ success: false, message: 'Region kebun wajib diisi.' });
     }
+    const targetRegion = canonicalizeRegion(targetRegionRaw);
 
     const targetNormRegion = normalizeRegion(targetRegion);
 
