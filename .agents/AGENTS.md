@@ -13,6 +13,14 @@
    - Rencana Jul, Rencana Ags, Rencana Sep, Rencana Okt, **Rencana Nov**.
 4. **Synchronized Persistence:** Ensure both `addKebun` and `updateTK` handlers in `api/kebunTK.js` and all modal forms (Edit Kebun & Tambah Kebun) read, validate, and save `tk_oktober` and `target_november`.
 
+### Executive Intelligence Highlight & Reactive Cut-Off Rule
+**Setiap kali membangun atau memodifikasi fitur TK Panen di `laporan_produksi.html` dan `login.html`, AI agent WAJIB memastikan:**
+1. **Dinamis & Reaktif:** Panel `Executive Intelligence Highlight` dan kartu metrik KPI tidak boleh menggunakan angka statis hardcoded atau snapshot lama. Seluruh kalkulasi kekurangan (`totalReqTk - totalCutOff` serta defisit per regional/kebun) WAJIB dihitung ulang secara reaktif (*live in-memory calculation*) mengikuti bulan cut-off yang sedang dipilih dan dataset kebun yang sedang aktif/difilter.
+2. **Ketersediaan Selector Bulan Cut-Off:** Sediakan kontrol pilihan bulan Cut-Off interaktif (Mei s/d bulan ketersediaan terakhir, default: Oktober) di akun Admin dan akun Regional.
+3. **Format Rincian Defisit:**
+   - **Akun Admin (`laporan_produksi.html`):** Sisi kiri menampilkan total kekurangan seluruh regional berdasarkan cut-off aktif; sisi kanan merinci regional-regional yang defisit (`[Nama Region] Kekurangan [X] Orang`).
+   - **Akun Regional (`login.html`):** Sisi kiri menampilkan total kekurangan untuk region bersangkutan; sisi kanan merinci kebun-kebun spesifik di region tersebut yang defisit (`[Nama Kebun] Kekurangan [X] Orang`).
+
 ### Region Naming & Aggregation Harmonization Rule
 **When displaying, grouping, or filtering regional data for TK Panen in `laporan_produksi.html`, `login.html`, and backend APIs:**
 1. **Standard Region Label:** Always use **`Sumut 2`** as the official region name for all 10 Sumut 2 gardens (including `Bukit Harapan I`).
