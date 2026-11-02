@@ -1983,6 +1983,51 @@
 
 
 
+    // Maps any region name (formal or abbreviated) to the canonical abbreviation stored in DB.
+    // Prevents duplicates like 'Kalbar 2' vs 'Kalimantan Barat 2'.
+    var CANONICAL_REGION_MAP = {
+      // CRO I
+      'ACEH': 'Aceh',
+      'SUMUT 1': 'Sumut 1', 'SUMATERA UTARA 1': 'Sumut 1',
+      'SUMUT 2': 'Sumut 2', 'SUMATERA UTARA 2': 'Sumut 2', 'SUMATERA UTARA 2 EX TORGANDA': 'Sumut 2', 'SUMUT 2 EX TORGANDA': 'Sumut 2',
+      // CRO II
+      'RIAU 1': 'Riau 1',
+      // CRO III
+      'RIAU 2': 'Riau 2', 'RIAU 3': 'Riau 3',
+      // CRO IV
+      'RIAU 4': 'Riau 4',
+      // CRO V
+      'SUMBAR': 'Sumbar', 'SUMATERA BARAT': 'Sumbar',
+      'JAMBI': 'Jambi',
+      'BABEL': 'Babel', 'BANGKA BELITUNG': 'Babel',
+      'SUMSEL': 'Sumsel', 'SUMATERA SELATAN': 'Sumsel',
+      // CRO VI
+      'KALBAR 1': 'Kalbar 1', 'KALBAR 1A': 'Kalbar 1', 'KALBAR 1B': 'Kalbar 1',
+      'KALIMANTAN BARAT 1': 'Kalbar 1', 'KALIMANTAN BARAT 1A': 'Kalbar 1', 'KALIMANTAN BARAT 1B': 'Kalbar 1',
+      'KALBAR 2': 'Kalbar 2', 'KALIMANTAN BARAT 2': 'Kalbar 2',
+      // CRO VII
+      'KALSEL 1': 'Kalsel 1', 'KALIMANTAN SELATAN 1': 'Kalsel 1',
+      'KALSEL 2': 'Kalsel 2', 'KALIMANTAN SELATAN 2': 'Kalsel 2',
+      'KALTARA': 'Kaltara', 'KALIMANTAN UTARA': 'Kaltara',
+      'KALTIM': 'Kaltim', 'KALIMANTAN TIMUR': 'Kaltim',
+      // CRO VIII
+      'KALTENG 1': 'Kalteng 1', 'KALIMANTAN TENGAH 1': 'Kalteng 1',
+      'KALTENG 3': 'Kalteng 3', 'KALIMANTAN TENGAH 3': 'Kalteng 3',
+      // CRO IX
+      'KALTENG 2': 'Kalteng 2', 'KALIMANTAN TENGAH 2': 'Kalteng 2',
+      // CRO X
+      'SULTENG': 'Sulteng', 'SULAWESI TENGAH': 'Sulteng',
+      'SULTRA': 'Sultra', 'SULAWESI TENGGARA': 'Sultra',
+      // CRO XI
+      'PAPUA SELATAN': 'Papua Selatan', 'PAPUA': 'Papua Selatan'
+    };
+
+    function canonicalizeRegion(rStr) {
+      if (!rStr) return rStr;
+      var upper = String(rStr).trim().toUpperCase();
+      return CANONICAL_REGION_MAP[upper] || rStr;
+    }
+
     var REGION_TO_CRO_MAP = {
       // CRO I
       'Aceh': 'CRO I',
@@ -2713,7 +2758,7 @@
       var payload = {
         nama_kebun: document.getElementById("addNamaKebun").value.trim(),
         cro: (document.getElementById("addCro") ? document.getElementById("addCro").value : "") || detectCroForRegion(document.getElementById("addRegion").value.trim(), globalTKData),
-        region: document.getElementById("addRegion").value.trim(),
+        region: canonicalizeRegion(document.getElementById("addRegion").value.trim()),
         luasan: parseFloat(document.getElementById("addLuasan").value) || 0,
         req_tk: parseInt(document.getElementById("addReqTK").value, 10) || 0,
         tk_juni: parseInt(document.getElementById("addTKJuniVal").value, 10) || 0,

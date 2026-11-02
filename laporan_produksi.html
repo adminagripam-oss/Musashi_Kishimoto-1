@@ -4235,11 +4235,43 @@
       let sumMei = 0, sumJuni = 0, sumJuli = 0, sumAgs = 0, sumSept = 0, sumOkt = 0;
       let sumRencanaJuli = 0, sumRencanaAgs = 0, sumRencanaSept = 0, sumRencanaOkt = 0, sumRencanaNov = 0;
 
-      // Grouping data
+      // Grouping data — normalize aliases to canonical names to prevent duplicates
+      // e.g. 'Kalimantan Barat 2' and 'Kalbar 2' must merge into one row
+      const CANONICAL_WILAYAH_ALIAS = {
+        'ACEH': 'Aceh',
+        'SUMUT 1': 'Sumut 1', 'SUMATERA UTARA 1': 'Sumut 1',
+        'SUMUT 2': 'Sumut 2', 'SUMATERA UTARA 2': 'Sumut 2',
+        'SUMATERA UTARA 2 EX TORGANDA': 'Sumut 2', 'SUMUT 2 EX TORGANDA': 'Sumut 2',
+        'RIAU 1': 'Riau 1', 'RIAU 2': 'Riau 2', 'RIAU 3': 'Riau 3', 'RIAU 4': 'Riau 4',
+        'SUMBAR': 'Sumbar', 'SUMATERA BARAT': 'Sumbar',
+        'JAMBI': 'Jambi',
+        'BABEL': 'Babel', 'BANGKA BELITUNG': 'Babel',
+        'SUMSEL': 'Sumsel', 'SUMATERA SELATAN': 'Sumsel',
+        'KALBAR 1': 'Kalbar 1', 'KALBAR 1A': 'Kalbar 1', 'KALBAR 1B': 'Kalbar 1',
+        'KALIMANTAN BARAT 1': 'Kalbar 1', 'KALIMANTAN BARAT 1A': 'Kalbar 1', 'KALIMANTAN BARAT 1B': 'Kalbar 1',
+        'KALBAR 2': 'Kalbar 2', 'KALIMANTAN BARAT 2': 'Kalbar 2',
+        'KALSEL 1': 'Kalsel 1', 'KALIMANTAN SELATAN 1': 'Kalsel 1',
+        'KALSEL 2': 'Kalsel 2', 'KALIMANTAN SELATAN 2': 'Kalsel 2',
+        'KALTARA': 'Kaltara', 'KALIMANTAN UTARA': 'Kaltara',
+        'KALTIM': 'Kaltim', 'KALIMANTAN TIMUR': 'Kaltim',
+        'KALTENG 1': 'Kalteng 1', 'KALIMANTAN TENGAH 1': 'Kalteng 1',
+        'KALTENG 2': 'Kalteng 2', 'KALIMANTAN TENGAH 2': 'Kalteng 2',
+        'KALTENG 3': 'Kalteng 3', 'KALIMANTAN TENGAH 3': 'Kalteng 3',
+        'SULTENG': 'Sulteng', 'SULAWESI TENGAH': 'Sulteng',
+        'SULTRA': 'Sultra', 'SULAWESI TENGGARA': 'Sultra',
+        'PAPUA SELATAN': 'Papua Selatan', 'PAPUA': 'Papua Selatan'
+      };
+      const canonicalWilayah = (r) => {
+        if (!r) return r;
+        return CANONICAL_WILAYAH_ALIAS[String(r).trim().toUpperCase()] || r;
+      };
+
       const grouped = {};
       (kebunData || []).forEach(item => {
         let region = item.region || '-';
         if (region.toLowerCase() === 'papua selatan') return;
+        // Normalize all region name variants (formal or abbreviated) to canonical abbreviation
+        region = canonicalWilayah(region);
         if (region === 'Sumatera Utara 2 Ex Torganda' || region === 'Sumut 2 Ex Torganda') {
           region = 'Sumut 2';
         }
