@@ -42,7 +42,14 @@ Aturan-aturan berikut selaras 100% dengan `.agents/AGENTS.md` dan **WAJIB** dipa
    `Rencana Jul`, `Rencana Ags`, `Rencana Sep`, `Rencana Okt`, `Rencana Nov`.
 4. **Persistensi Sinkron:** Pastikan handler `addKebun` dan `updateTK` di `api/kebunTK.js` serta form modal (Edit Kebun & Tambah Kebun) membaca, memvalidasi, dan menyimpan `tk_oktober` dan `target_november`.
 
-### D. TK Panen New Month Column Expansion Checklist
+### D. Executive Intelligence Highlight & Reactive Cut-Off Rule
+1. **Dinamis & Reaktif:** Panel `Executive Intelligence Highlight` dan kartu metrik KPI tidak boleh menggunakan angka statis hardcoded atau snapshot lama. Seluruh kalkulasi kekurangan (`totalReqTk - totalCutOff` serta defisit per regional/kebun) WAJIB dihitung ulang secara reaktif (*live in-memory calculation*) mengikuti bulan cut-off yang sedang dipilih dan dataset kebun yang sedang aktif/difilter.
+2. **Ketersediaan Selector Bulan Cut-Off:** Sediakan kontrol pilihan bulan Cut-Off interaktif (Mei s/d bulan ketersediaan terakhir, default: Oktober) di akun Admin dan akun Regional.
+3. **Format Rincian Defisit:**
+   - **Akun Admin (`laporan_produksi.html`):** Sisi kiri menampilkan total kekurangan seluruh regional berdasarkan cut-off aktif; sisi kanan merinci regional-regional yang defisit (`[Nama Region] Kekurangan [X] Orang`).
+   - **Akun Regional (`login.html`):** Sisi kiri menampilkan total kekurangan untuk region bersangkutan; sisi kanan merinci kebun-kebun spesifik di region tersebut yang defisit (`[Nama Kebun] Kekurangan [X] Orang`).
+
+### E. TK Panen New Month Column Expansion Checklist
 Jika menambahkan kolom bulan baru (misal Oktober, November, dst.), ikuti urutan berikut:
 1. **Database First:** Buat migrasi SQL (`ALTER TABLE data_kebun_tk ADD COLUMN IF NOT EXISTS ...`).
 2. **Backend API (`api/kebunTK.js`):** Tambahkan di Supabase fetch mapping loop, `fullPayload`, dan `safePayload`.

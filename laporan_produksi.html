@@ -4112,40 +4112,79 @@
     // TK PANEN VIEW (Realisasi Tenaga Kerja Panen Kebun)
     // ============================================================
 
-    function ExecutiveIntelligenceHighlight({ kebunData, summary }) {
+    function ExecutiveIntelligenceHighlight({ kebunData, cutOffField = 'tk_oktober', cutOffLabel = 'Oktober' }) {
       if (!kebunData || kebunData.length === 0) return null;
 
-      // Group by region
+      let totalReq = 0;
+      let totalAvail = 0;
       const regionStats = {};
+
       kebunData.forEach(k => {
         const reg = k.region || 'Unknown';
         if (!regionStats[reg]) {
           regionStats[reg] = { req: 0, avail: 0 };
         }
-        regionStats[reg].req += parseFloat(k.req_tk) || 0;
-        const cutOffField = summary?.cutOffField || 'tk_oktober';
-        regionStats[reg].avail += parseFloat(k[cutOffField]) || 0;
+        const req = parseFloat(k.req_tk) || 0;
+        const avail = parseFloat(k[cutOffField]) || 0;
+        regionStats[reg].req += req;
+        regionStats[reg].avail += avail;
+        totalReq += req;
+        totalAvail += avail;
       });
 
-      const regions = Object.keys(regionStats).map(reg => {
-        const req = regionStats[reg].req;
-        const avail = regionStats[reg].avail;
-        const deficit = req - avail;
-        return { name: reg, req, avail, deficit };
-      });
+      const kekurangTK = Math.max(0, totalReq - totalAvail);
 
-      const cutOffMonth = summary?.cutOffMonth || 'Oktober';
-      const totalReqTk = summary?.totalReqTk || 0;
-      const kekurangTK = summary?.kekurangTK || 0;
+      const uniqueRegions = Object.keys(regionStats).filter(r => r !== 'Unknown');
+      const isSingleRegion = uniqueRegions.length === 1;
+      const singleRegionName = isSingleRegion ? uniqueRegions[0] : '';
 
-      const regionDetailsElements = regions
-        .filter(r => r.name !== 'Unknown')
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map((r, i, arr) => (
-          <span key={r.name}>
-            <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{r.name}</strong> Kekurangan <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{Number(Math.max(0, r.deficit)).toLocaleString('id-ID')}</strong> Orang{i < arr.length - 1 ? ', ' : '.'}
+      let detailsElements = null;
+
+      if (isSingleRegion) {
+        const deficitKebuns = kebunData
+          .map(k => {
+            const req = parseFloat(k.req_tk) || 0;
+            const avail = parseFloat(k[cutOffField]) || 0;
+            const deficit = Math.max(0, req - avail);
+            return { name: k.nama_kebun, deficit };
+          })
+          .filter(k => k.deficit > 0)
+          .sort((a, b) => b.deficit - a.deficit);
+
+        detailsElements = deficitKebuns.length > 0 ? (
+          deficitKebuns.map((k, i, arr) => (
+            <span key={k.name}>
+              <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{k.name}</strong> Kekurangan <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{Number(k.deficit).toLocaleString('id-ID')}</strong> Orang{i < arr.length - 1 ? ', ' : '.'}
+            </span>
+          ))
+        ) : (
+          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+            Seluruh kebun di Region {singleRegionName} telah mencukupi kebutuhan tenaga panen cut-off {cutOffLabel}.
           </span>
-        ));
+        );
+      } else {
+        const regions = uniqueRegions
+          .map(reg => {
+            const req = regionStats[reg].req;
+            const avail = regionStats[reg].avail;
+            const deficit = Math.max(0, req - avail);
+            return { name: reg, req, avail, deficit };
+          })
+          .filter(r => r.deficit > 0)
+          .sort((a, b) => b.deficit - a.deficit);
+
+        detailsElements = regions.length > 0 ? (
+          regions.map((r, i, arr) => (
+            <span key={r.name}>
+              <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{r.name}</strong> Kekurangan <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{Number(r.deficit).toLocaleString('id-ID')}</strong> Orang{i < arr.length - 1 ? ', ' : '.'}
+            </span>
+          ))
+        ) : (
+          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+            Seluruh regional telah mencukupi kebutuhan tenaga panen cut-off {cutOffLabel}.
+          </span>
+        );
+      }
 
       return (
         <div className="relative rounded-2xl mb-6 overflow-hidden border border-slate-300 dark:border-slate-700 shadow-md">
@@ -4165,14 +4204,22 @@
                 </h2>
               </div>
               <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-relaxed pr-2">
-                Berdasarkan data ketersediaan TK Panen cut-off <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{cutOffMonth}</strong>, dengan Kekurangan tenaga Panen <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{Number(Math.max(0, kekurangTK)).toLocaleString('id-ID')}</strong> Orang.
+                {isSingleRegion ? (
+                  <>
+                    Berdasarkan data ketersediaan TK Panen cut-off <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{cutOffLabel}</strong>, Region <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{singleRegionName}</strong> mengalami Kekurangan tenaga Panen <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{Number(kekurangTK).toLocaleString('id-ID')}</strong> Orang.
+                  </>
+                ) : (
+                  <>
+                    Berdasarkan data ketersediaan TK Panen cut-off <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{cutOffLabel}</strong>, dengan Kekurangan tenaga Panen <strong className="text-[#B8860B] font-bold drop-shadow-[0_0_5px_rgba(184,134,11,0.5)]">{Number(kekurangTK).toLocaleString('id-ID')}</strong> Orang.
+                  </>
+                )}
               </p>
             </div>
 
             {/* Right Column */}
             <div className="md:w-2/3 flex items-center">
               <p className="text-xs md:text-[13px] font-bold leading-[1.8] text-slate-800 dark:text-slate-200 text-justify">
-                {regionDetailsElements}
+                {detailsElements}
               </p>
             </div>
           </div>
@@ -4563,6 +4610,15 @@
       }, [kebunData, userRegion, isAdmin]);
 
       const [selectedRegion, setSelectedRegion] = useState(isAdmin ? 'ALL' : userRegion);
+      const CUT_OFF_MONTHS = [
+        { key: 'tk_mei', label: 'Mei' },
+        { key: 'tk_juni', label: 'Juni' },
+        { key: 'tk_juli', label: 'Juli' },
+        { key: 'tk_agustus', label: 'Agustus' },
+        { key: 'tk_september', label: 'September' },
+        { key: 'tk_oktober', label: 'Oktober' }
+      ];
+      const [activeCutOffMonth, setActiveCutOffMonth] = useState('tk_oktober');
       const [searchQuery, setSearchQuery] = useState('');
       const [edits, setEdits] = useState({});
       const [saving, setSaving] = useState(false);
@@ -4724,13 +4780,17 @@
       const endIdx = startIdx + pageSize;
       const paginatedKebun = filteredKebun.slice(startIdx, endIdx);
 
-      const cutOffField = summary.cutOffField || 'tk_oktober';
-      const cutOffMonth = summary.cutOffMonth || 'Oktober';
+      const cutOffField = activeCutOffMonth;
+      const cutOffMonth = (CUT_OFF_MONTHS.find(m => m.key === activeCutOffMonth) || {}).label || 'Oktober';
 
-      const totalLuas = kebunData.reduce((s, x) => s + (parseFloat(x.luasan) || 0), 0);
-      const totalReqTk = kebunData.reduce((s, x) => s + (parseInt(x.req_tk) || 0), 0);
-      const totalCutOff = kebunData.reduce((s, x) => s + (parseInt(x[cutOffField]) || 0), 0);
-      const kekurangTK = totalReqTk - totalCutOff;
+      const totalLuas = filteredKebun.reduce((s, x) => s + (parseFloat(x.luasan) || 0), 0);
+      const totalReqTk = filteredKebun.reduce((s, x) => s + (parseInt(x.req_tk) || 0), 0);
+      const totalCutOff = filteredKebun.reduce((s, x) => {
+        const edit = edits[x.id] || {};
+        const val = edit[cutOffField] !== undefined ? edit[cutOffField] : (x[cutOffField] || 0);
+        return s + (parseInt(val) || 0);
+      }, 0);
+      const kekurangTK = Math.max(0, totalReqTk - totalCutOff);
 
       const handleExportTKPanenExcel = () => {
         if (!filteredKebun || filteredKebun.length === 0) {
@@ -5042,7 +5102,7 @@
             </div>
           </div>
 
-          <ExecutiveIntelligenceHighlight kebunData={filteredKebun} summary={summary} />
+          <ExecutiveIntelligenceHighlight kebunData={filteredKebun} cutOffField={cutOffField} cutOffLabel={cutOffMonth} />
 
           {/* Large Fluid 5 KPI Badges */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 w-full transition-all duration-300">
@@ -5080,46 +5140,61 @@
 
           {/* Search & Regional Filter Row */}
           <div className="bg-white dark:bg-[#1E1E1E] p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-            {isAdmin ? (
+            <div className="flex flex-wrap items-center gap-3">
+              {isAdmin ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-500">Filter Regional:</span>
+                  <select
+                    value={selectedRegion}
+                    onChange={(e) => setSelectedRegion(e.target.value)}
+                    className="px-3 py-2 bg-slate-50 dark:bg-[#1E1E1E] border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="ALL">Semua Regional (23 Region)</option>
+                    <option value="Aceh">Aceh</option>
+                    <option value="Sumut 1">Sumut 1</option>
+                    <option value="Sumut 2">Sumut 2</option>
+                    <option value="Riau 1">Riau 1</option>
+                    <option value="Riau 2">Riau 2</option>
+                    <option value="Riau 3">Riau 3</option>
+                    <option value="Riau 4">Riau 4</option>
+                    <option value="Babel">Bangka Belitung</option>
+                    <option value="Jambi">Jambi</option>
+                    <option value="Sumbar">Sumatera Barat</option>
+                    <option value="Sumsel">Sumatera Selatan</option>
+                    <option value="Kalbar 1">Kalbar 1</option>
+                    <option value="Kalbar 2">Kalbar 2</option>
+                    <option value="Kalsel 1">Kalsel 1</option>
+                    <option value="Kalsel 2">Kalsel 2</option>
+                    <option value="Kaltara">Kaltara</option>
+                    <option value="Kaltim">Kaltim</option>
+                    <option value="Kalteng 1">Kalteng 1</option>
+                    <option value="Kalteng 2">Kalteng 2</option>
+                    <option value="Kalteng 3">Kalteng 3</option>
+                    <option value="Sulteng">Sulteng</option>
+                    <option value="Sultra">Sultra</option>
+                    <option value="Papua Selatan">Papua Selatan</option>
+                  </select>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 shadow-xs">
+                  <Icon name="map-pin" size={16} />
+                  <span>Regional Terkunci: {userRegion}</span>
+                </div>
+              )}
+
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-500">Filter Regional:</span>
+                <span className="text-xs font-semibold text-slate-500">Bulan Cut-Off:</span>
                 <select
-                  value={selectedRegion}
-                  onChange={(e) => setSelectedRegion(e.target.value)}
-                  className="px-3 py-2 bg-slate-50 dark:bg-[#1E1E1E] border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500"
+                  value={activeCutOffMonth}
+                  onChange={(e) => setActiveCutOffMonth(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 dark:bg-[#1E1E1E] border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
-                  <option value="ALL">Semua Regional (23 Region)</option>
-                  <option value="Aceh">Aceh</option>
-                  <option value="Sumut 1">Sumut 1</option>
-                  <option value="Sumut 2">Sumut 2</option>
-                  <option value="Riau 1">Riau 1</option>
-                  <option value="Riau 2">Riau 2</option>
-                  <option value="Riau 3">Riau 3</option>
-                  <option value="Riau 4">Riau 4</option>
-                  <option value="Babel">Bangka Belitung</option>
-                  <option value="Jambi">Jambi</option>
-                  <option value="Sumbar">Sumatera Barat</option>
-                  <option value="Sumsel">Sumatera Selatan</option>
-                  <option value="Kalbar 1">Kalbar 1</option>
-                  <option value="Kalbar 2">Kalbar 2</option>
-                  <option value="Kalsel 1">Kalsel 1</option>
-                  <option value="Kalsel 2">Kalsel 2</option>
-                  <option value="Kaltara">Kaltara</option>
-                  <option value="Kaltim">Kaltim</option>
-                  <option value="Kalteng 1">Kalteng 1</option>
-                  <option value="Kalteng 2">Kalteng 2</option>
-                  <option value="Kalteng 3">Kalteng 3</option>
-                  <option value="Sulteng">Sulteng</option>
-                  <option value="Sultra">Sultra</option>
-                  <option value="Papua Selatan">Papua Selatan</option>
+                  {CUT_OFF_MONTHS.map(m => (
+                    <option key={m.key} value={m.key}>{m.label}</option>
+                  ))}
                 </select>
               </div>
-            ) : (
-              <div className="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 shadow-xs">
-                <Icon name="map-pin" size={16} />
-                <span>Regional Terkunci: {userRegion}</span>
-              </div>
-            )}
+            </div>
 
             <div className="flex items-center gap-2 max-w-xl flex-1">
               <div className="flex-1 relative">
